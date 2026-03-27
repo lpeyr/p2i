@@ -1,2 +1,2 @@
-# p2i
-Projet P2I
+# P2I
+Repo pour le Projet P2I.
