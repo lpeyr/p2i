@@ -37,24 +37,6 @@ export default function ActivityPage() {
         speed: 0,
     });
 
-    // Simulation des données (à remplacer par SSE)
-    useState(() => {
-        if (!isActive) return;
-
-        const interval = setInterval(() => {
-            setActivityData((prev) => ({
-                ...prev,
-                steps: prev.steps + (Math.random() > 0.5 ? 1 : 0),
-                duration: prev.duration + 1,
-                leftFootPressure: Math.random() * 100,
-                rightFootPressure: Math.random() * 100,
-                speed: 4.5 + Math.random() * 1.5,
-            }));
-        }, 1000);
-
-        return () => clearInterval(interval);
-    });
-
     const formatDuration = (seconds: number) => {
         const hours = Math.floor(seconds / 3600);
         const minutes = Math.floor((seconds % 3600) / 60);
