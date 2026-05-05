@@ -2,7 +2,7 @@
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@heroui/react";
-import { AntennaSignal, House, Person } from "@gravity-ui/icons";
+import { Clock, House, Person } from "@gravity-ui/icons";
 
 export default function NavBar() {
     const pathname = usePathname();
@@ -19,22 +19,22 @@ export default function NavBar() {
                         Accueil
                     </Button>
                 </Link>
-                <Link href="/semelles">
+                <Link href="/activity">
                     <Button
-                        variant={pathname === "/semelles" ? "primary" : "secondary"}
+                        variant={pathname === "/activity" ? "primary" : "secondary"}
                         className="flex h-auto w-full flex-col items-center space-y-0 py-2"
                     >
                         <Person />
-                        Mes semelles
+                        Activité
                     </Button>
                 </Link>
-                <Link href="/visu">
+                <Link href="/history">
                     <Button
-                        variant={pathname === "/visu" ? "primary" : "secondary"}
+                        variant={pathname === "/history" ? "primary" : "secondary"}
                         className="flex h-auto w-full flex-col items-center space-y-0 py-2"
                     >
-                        <AntennaSignal />
-                        En direct
+                        <Clock />
+                        Historique
                     </Button>
                 </Link>
             </div>
