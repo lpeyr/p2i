@@ -7,6 +7,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: semelle
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -15,10 +18,6 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: 24.x
-
-      - name: Change to project directory
-        run: cd semelle
-
       - name: Install dependencies
         run: npm i
 
