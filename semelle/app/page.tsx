@@ -1,65 +1,228 @@
-import Image from "next/image";
+"use client";
+
+import { Alert, Button, Card, CardHeader, Chip, Separator } from "@heroui/react";
+import { Moon, Sun } from "@gravity-ui/icons";
+import { useTheme } from "next-themes";
 
 export default function Home() {
+    const { theme, setTheme } = useTheme();
+
+    const semelles = [
+        {
+            id: "left",
+            name: "Semelle Gauche",
+            active: true,
+            steps: 4215,
+            distance: 2.6,
+            calories: 160,
+        },
+        {
+            id: "right",
+            name: "Semelle Droite",
+            active: true,
+            steps: 4217,
+            distance: 2.6,
+            calories: 165,
+        },
+    ];
     return (
-        <div className="flex flex-1 flex-col items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-            <main className="flex w-full max-w-3xl flex-1 flex-col items-center justify-between bg-white px-16 py-32 sm:items-start dark:bg-black">
-                <Image
-                    className="dark:invert"
-                    src="/next.svg"
-                    alt="Next.js logo"
-                    width={100}
-                    height={20}
-                    priority
-                />
-                <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-                    <h1 className="max-w-xs text-3xl leading-10 font-semibold tracking-tight text-black dark:text-zinc-50">
-                        To get started, edit the page.tsx file.
-                    </h1>
-                    <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-                        Looking for a starting point or more instructions? Head over to{" "}
-                        <a
-                            href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-                            className="font-medium text-zinc-950 dark:text-zinc-50"
-                        >
-                            Templates
-                        </a>{" "}
-                        or the{" "}
-                        <a
-                            href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-                            className="font-medium text-zinc-950 dark:text-zinc-50"
-                        >
-                            Learning
-                        </a>{" "}
-                        center.
-                    </p>
-                </div>
-                <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-                    <a
-                        className="bg-foreground text-background flex h-12 w-full items-center justify-center gap-2 rounded-full px-5 transition-colors hover:bg-[#383838] md:w-[158px] dark:hover:bg-[#ccc]"
-                        href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-                        target="_blank"
-                        rel="noopener noreferrer"
+        <main className="text-foreground min-h-screen p-8">
+            <div className="mx-auto max-w-6xl space-y-8">
+                <section className="flex items-start justify-between">
+                    <div className="space-y-2">
+                        <h1 className="text-foreground text-4xl font-bold">
+                            Bienvenue sur Semelle
+                        </h1>
+                        <p className="text-muted-foreground text-lg">
+                            Analysez et optimisez votre marche avec vos semelles intelligentes
+                        </p>
+                    </div>
+                    <Button
+                        isIconOnly
+                        variant="secondary"
+                        onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                        aria-label={theme === "dark" ? "Mode clair" : "Mode sombre"}
                     >
-                        <Image
-                            className="dark:invert"
-                            src="/vercel.svg"
-                            alt="Vercel logomark"
-                            width={16}
-                            height={16}
-                        />
-                        Deploy Now
-                    </a>
-                    <a
-                        className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] md:w-[158px] dark:border-white/[.145] dark:hover:bg-[#1a1a1a]"
-                        href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                    >
-                        Documentation
-                    </a>
-                </div>
-            </main>
-        </div>
+                        {theme === "dark" ? <Sun /> : <Moon />}
+                    </Button>
+                </section>
+
+                <section className="space-y-4">
+                    <h2 className="text-foreground text-2xl font-semibold">État des Semelles</h2>
+                    <div className="grid gap-6 md:grid-cols-2">
+                        {semelles.map((semelle) => (
+                            <Card
+                                key={semelle.id}
+                                className="border-separator from-default-50 to-default-100 overflow-hidden border bg-linear-to-br transition-shadow hover:shadow-lg"
+                            >
+                                <CardHeader className="flex flex-row items-start justify-between gap-4 pb-3">
+                                    <div className="flex items-center gap-3">
+                                        <div className="relative">
+                                            <div
+                                                className={`absolute inset-0 animate-pulse rounded-full opacity-75 ${semelle.active ? "bg-success" : "bg-warning"}`}
+                                            ></div>
+                                            <div
+                                                className={`relative h-3 w-3 rounded-full ${semelle.active ? "bg-success" : "bg-warning"}`}
+                                            ></div>
+                                        </div>
+                                        <div>
+                                            <h3 className="text-foreground text-xl font-semibold">
+                                                {semelle.name}
+                                            </h3>
+                                            <p
+                                                className={`text-xs font-medium ${semelle.active ? "text-success" : "text-warning"}`}
+                                            >
+                                                {semelle.active
+                                                    ? "Connectée et active"
+                                                    : "Déconnectée"}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </CardHeader>
+                                <Separator />
+                                <div className="flex flex-col gap-6 p-6">
+                                    {/* Stats Grid */}
+                                    <div className="grid grid-cols-3 gap-3">
+                                        <div className="bg-primary-50 rounded-lg p-3">
+                                            <p className="text-muted-foreground mb-1 text-xs font-medium">
+                                                Pas
+                                            </p>
+                                            <p className="text-foreground text-lg font-bold">
+                                                {semelle.steps.toLocaleString()}
+                                            </p>
+                                        </div>
+                                        <div className="bg-secondary-50 rounded-lg p-3">
+                                            <p className="text-muted-foreground mb-1 text-xs font-medium">
+                                                Distance
+                                            </p>
+                                            <p className="text-foreground text-lg font-bold">
+                                                {semelle.distance} km
+                                            </p>
+                                        </div>
+                                        <div className="bg-warning-50 rounded-lg p-3">
+                                            <p className="text-muted-foreground mb-1 text-xs font-medium">
+                                                Calories
+                                            </p>
+                                            <p className="text-foreground text-lg font-bold">
+                                                {semelle.calories}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <Button
+                                        variant="secondary"
+                                        size="sm"
+                                        className="w-full"
+                                        isDisabled={!semelle.active}
+                                    >
+                                        Voir Détails
+                                    </Button>
+                                </div>
+                            </Card>
+                        ))}
+                    </div>
+                </section>
+
+                {/* Dashboard Stats */}
+                <section className="space-y-4">
+                    <h2 className="text-foreground text-2xl font-semibold">Tableau de Bord</h2>
+                    <div className="grid gap-4 md:grid-cols-4">
+                        {[
+                            {
+                                id: "steps",
+                                label: "Pas aujourd'hui",
+                                value: "8,432",
+                                trend: "↑ +2.5%",
+                            },
+                            {
+                                id: "distance",
+                                label: "Distance",
+                                value: "5.2 km",
+                                trend: "↑ +0.8 km",
+                            },
+                            {
+                                id: "active",
+                                label: "Temps actif",
+                                value: "45 min",
+                                trend: "↑ +10 min",
+                            },
+                            {
+                                id: "calories",
+                                label: "Calories brûlées",
+                                value: "245 kcal",
+                                trend: "↑ +35 kcal",
+                            },
+                        ].map((stat) => (
+                            <Card key={stat.id} className="border-separator bg-surface border">
+                                <div className="gap-2 p-6">
+                                    <p className="text-muted-foreground text-sm font-medium">
+                                        {stat.label}
+                                    </p>
+                                    <p className="text-foreground text-3xl font-bold">
+                                        {stat.value}
+                                    </p>
+                                    <Chip
+                                        variant="soft"
+                                        color="success"
+                                        size="sm"
+                                        className="mt-2 w-fit"
+                                    >
+                                        {stat.trend}
+                                    </Chip>
+                                </div>
+                            </Card>
+                        ))}
+                    </div>
+                </section>
+
+                {/* Health Issues Detection */}
+                <section className="space-y-4">
+                    <h2 className="text-foreground text-2xl font-semibold">
+                        Détection de Problèmes
+                    </h2>
+                    <div className="space-y-3">
+                        <Alert status="success">
+                            <Alert.Indicator />
+                            <Alert.Content>
+                                <Alert.Title>Votre marche est normale et régulière</Alert.Title>
+                            </Alert.Content>
+                        </Alert>
+                        <Card className="border-separator bg-default-100 border">
+                            <div className="gap-3">
+                                <div className="flex items-start gap-3">
+                                    <div className="flex-1">
+                                        <p className="text-foreground font-semibold">
+                                            Pression inégale détectée
+                                        </p>
+                                        <p className="text-muted-foreground mt-1 text-sm">
+                                            Légère asymétrie entre la semelle gauche et droite.
+                                            Continuez à monitorer.
+                                        </p>
+                                    </div>
+                                    <Chip variant="soft" color="default" size="sm">
+                                        Info
+                                    </Chip>
+                                </div>
+                            </div>
+                        </Card>
+                    </div>
+                </section>
+
+                {/* Quick Actions */}
+                <section className="space-y-4">
+                    <div className="flex gap-3">
+                        <Button variant="primary" size="lg">
+                            Commencer une Session
+                        </Button>
+                        <Button variant="outline" size="lg">
+                            Voir l&apos;Historique
+                        </Button>
+                        <Button variant="outline" size="lg">
+                            Paramètres
+                        </Button>
+                    </div>
+                </section>
+            </div>
+        </main>
     );
 }
