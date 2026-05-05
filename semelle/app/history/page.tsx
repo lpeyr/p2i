@@ -1,7 +1,6 @@
 "use client";
 
 import {
-    Button,
     Card,
     CardHeader,
     Chip,
@@ -108,12 +107,18 @@ export default function HistoryPage() {
             return 0;
         });
 
+    const stats = [
+        { value: "date", label: "Date" },
+        { value: "distance", label: "Distance" },
+        { value: "duration", label: "Durée" },
+        { value: "steps", label: "Pas" },
+    ];
     return (
-        <main className="bg-background min-h-screen p-8">
+        <main className="min-h-screen p-8">
             <div className="mx-auto max-w-6xl space-y-8">
                 {/* Header */}
                 <section className="space-y-2">
-                    <h1 className="text-foreground text-4xl font-bold">Historique des Activités</h1>
+                    <h1 className="text-4xl font-bold">Historique des Activités</h1>
                     <p className="text-muted-foreground text-lg">
                         Consultez toutes vos sessions de marche
                     </p>
@@ -132,41 +137,32 @@ export default function HistoryPage() {
                             <SearchField.ClearButton />
                         </SearchField.Group>
                     </SearchField>
-                    <div className="grid gap-4 md:grid-cols-2">
-                        {/* Duration Filter */}
-
-                        {/* Sort */}
-                        <div className="space-y-2">
-                            <Select
-                                onChange={(v) => setSortBy(v as string)}
-                                className="w-[256px]"
-                                placeholder="Sélectionner un filtre"
-                            >
-                                <Label>Trier par</Label>
-                                <Select.Trigger>
-                                    <Select.Value />
-                                    <Select.Indicator />
-                                </Select.Trigger>
-                                <Select.Popover>
-                                    <ListBox>
-                                        {[
-                                            { value: "date", label: "Date" },
-                                            { value: "distance", label: "Distance" },
-                                            { value: "duration", label: "Durée" },
-                                            { value: "steps", label: "Pas" },
-                                        ].map((e, i) => (
-                                            <ListBox.Item
-                                                key={e.value + `${i}`}
-                                                id={e.value}
-                                                textValue={e.value}
-                                            >
-                                                {e.label}
-                                            </ListBox.Item>
-                                        ))}
-                                    </ListBox>
-                                </Select.Popover>
-                            </Select>
-                        </div>
+                    {/* Sort */}
+                    <div className="space-y-2">
+                        <Select
+                            onChange={(v) => setSortBy(v as string)}
+                            className="w-full sm:w-64"
+                            placeholder="Sélectionner un filtre"
+                        >
+                            <Label>Trier par</Label>
+                            <Select.Trigger>
+                                <Select.Value />
+                                <Select.Indicator />
+                            </Select.Trigger>
+                            <Select.Popover>
+                                <ListBox>
+                                    {stats.map((e, i) => (
+                                        <ListBox.Item
+                                            key={e.value + `${i}`}
+                                            id={e.value}
+                                            textValue={e.value}
+                                        >
+                                            {e.label}
+                                        </ListBox.Item>
+                                    ))}
+                                </ListBox>
+                            </Select.Popover>
+                        </Select>
                     </div>
                 </section>
 
@@ -199,9 +195,9 @@ export default function HistoryPage() {
 
                 {/* Activities List */}
                 <section className="space-y-4">
-                    <h2 className="text-foreground text-2xl font-semibold">Vos Activités</h2>
+                    <h2 className="text-2xl font-semibold">Vos Activités</h2>
                     {filteredActivities.length === 0 ? (
-                        <Card className="border-separator from-default-50 to-default-100 border bg-linear-to-br">
+                        <Card className="border-separator border">
                             <div className="p-8 text-center">
                                 <p className="text-muted-foreground">Aucune activité trouvée</p>
                             </div>
@@ -214,15 +210,6 @@ export default function HistoryPage() {
                         </div>
                     )}
                 </section>
-
-                {/* Load More / Pagination */}
-                {filteredActivities.length > 0 && (
-                    <section className="flex justify-center">
-                        <Button variant="outline" size="lg">
-                            Charger plus
-                        </Button>
-                    </section>
-                )}
             </div>
         </main>
     );
@@ -256,9 +243,7 @@ function ActivityCard({ activity }: Readonly<ActivityItemProps>) {
             <Card className="border-separator hover:border-primary cursor-pointer border transition-shadow hover:shadow-md">
                 <CardHeader className="flex flex-row items-start justify-between gap-4">
                     <div className="flex-1">
-                        <p className="text-foreground text-lg font-semibold">
-                            {formatDate(activity.date)}
-                        </p>
+                        <p className="text-lg font-semibold">{formatDate(activity.date)}</p>
                         <p className="text-muted-foreground mt-1 text-sm">
                             {activity.distance.toFixed(1)} km • {formatDuration(activity.duration)}
                         </p>
@@ -294,9 +279,9 @@ interface MetricBadgeProps {
 
 function MetricBadge({ label, value }: Readonly<MetricBadgeProps>) {
     return (
-        <div className="bg-default-100 rounded-lg p-3 text-center">
+        <div className="rounded-lg p-3 text-center">
             <p className="text-muted-foreground text-xs font-medium">{label}</p>
-            <p className="text-foreground mt-1 text-sm font-bold">{value}</p>
+            <p className="mt-1 text-sm font-bold">{value}</p>
         </div>
     );
 }
@@ -310,11 +295,11 @@ interface StatSummaryProps {
 
 function StatSummary({ label, value, unit }: Readonly<StatSummaryProps>) {
     return (
-        <Card className="border-separator from-default-50 to-default-100 border bg-linear-to-br">
-            <div className="gap-2 p-6">
+        <Card className="border-separator border">
+            <div className="gap-2 p-2">
                 <p className="text-muted-foreground text-sm font-medium">{label}</p>
                 <div className="flex items-baseline gap-1">
-                    <p className="text-foreground text-2xl font-bold">{value}</p>
+                    <p className="text-2xl font-bold">{value}</p>
                     {unit && <p className="text-muted-foreground text-sm">{unit}</p>}
                 </div>
             </div>
