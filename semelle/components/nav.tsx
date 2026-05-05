@@ -15,7 +15,7 @@ export default function NavBar() {
                         variant={pathname === "/" ? "primary" : "secondary"}
                         className="flex h-auto w-full flex-col items-center space-y-0 py-2"
                     >
-                        <House />
+                        <House className="m-0 -mb-1 h-6 w-6 p-0" />
                         Accueil
                     </Button>
                 </Link>
@@ -24,7 +24,7 @@ export default function NavBar() {
                         variant={pathname === "/activity" ? "primary" : "secondary"}
                         className="flex h-auto w-full flex-col items-center space-y-0 py-2"
                     >
-                        <Person />
+                        <Person className="m-0 -mb-1 h-6 w-6 p-0" />
                         Activité
                     </Button>
                 </Link>
@@ -33,7 +33,7 @@ export default function NavBar() {
                         variant={pathname === "/history" ? "primary" : "secondary"}
                         className="flex h-auto w-full flex-col items-center space-y-0 py-2"
                     >
-                        <Clock />
+                        <Clock className="m-0 -mb-1 h-6 w-6 p-0" />
                         Historique
                     </Button>
                 </Link>

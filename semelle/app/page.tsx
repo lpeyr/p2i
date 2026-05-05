@@ -1,6 +1,6 @@
 "use client";
 
-import { Alert, Button, Card, CardHeader, Chip, ProgressBar, Separator } from "@heroui/react";
+import { Alert, Button, Card, CardHeader, Chip, Separator } from "@heroui/react";
 import { Moon, Sun } from "@gravity-ui/icons";
 import { useTheme } from "next-themes";
 
@@ -11,7 +11,6 @@ export default function Home() {
         {
             id: "left",
             name: "Semelle Gauche",
-            battery: 85,
             active: true,
             steps: 4215,
             distance: 2.6,
@@ -20,7 +19,6 @@ export default function Home() {
         {
             id: "right",
             name: "Semelle Droite",
-            battery: 72,
             active: true,
             steps: 4217,
             distance: 2.6,
@@ -83,24 +81,6 @@ export default function Home() {
                                 </CardHeader>
                                 <Separator />
                                 <div className="flex flex-col gap-6 p-6">
-                                    {/* Batterie */}
-                                    <div>
-                                        <div className="mb-2 flex items-center justify-between">
-                                            <p className="text-foreground text-sm font-medium">
-                                                Batterie
-                                            </p>
-                                            <span className="text-foreground font-bold">
-                                                {semelle.battery}%
-                                            </span>
-                                        </div>
-                                        <ProgressBar
-                                            value={semelle.battery}
-                                            maxValue={100}
-                                            color={semelle.battery > 50 ? "success" : "warning"}
-                                            className="h-2"
-                                        />
-                                    </div>
-
                                     {/* Stats Grid */}
                                     <div className="grid grid-cols-3 gap-3">
                                         <div className="bg-primary-50 rounded-lg p-3">
