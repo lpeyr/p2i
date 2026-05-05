@@ -34,7 +34,7 @@ void displayGPSInfo() {
     Serial.print(F(","));
     Serial.print(gps.location.lng(), 6);
   } else {
-    Serial.print(F("INVALID"));
+    Serial.print(F("INVALID"));d
   }
 
   Serial.print(F("  Date/Time: "));
