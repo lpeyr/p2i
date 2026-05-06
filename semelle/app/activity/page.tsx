@@ -190,25 +190,32 @@ export default function ActivityPage() {
                     <Card className="border-separator overflow-hidden border">
                         <div className="space-y-4 p-0">
                             <Tabs>
-                                <Tabs.List aria-label="Options">
-                                    {[
-                                        {
-                                            id: "both",
-                                            label: "Les Deux Pieds",
-                                            side: "both" as const,
-                                        },
-                                        { id: "left", label: "Pied Gauche", side: "left" as const },
-                                        {
-                                            id: "right",
-                                            label: "Pied Droit",
-                                            side: "right" as const,
-                                        },
-                                    ].map((tab) => (
-                                        <Tabs.Tab key={tab.id} id={tab.id}>
-                                            {tab.label}
-                                        </Tabs.Tab>
-                                    ))}
-                                </Tabs.List>
+                                <Tabs.ListContainer>
+                                    <Tabs.List aria-label="Options">
+                                        {[
+                                            {
+                                                id: "both",
+                                                label: "Les Deux Pieds",
+                                                side: "both" as const,
+                                            },
+                                            {
+                                                id: "left",
+                                                label: "Pied Gauche",
+                                                side: "left" as const,
+                                            },
+                                            {
+                                                id: "right",
+                                                label: "Pied Droit",
+                                                side: "right" as const,
+                                            },
+                                        ].map((tab) => (
+                                            <Tabs.Tab key={tab.id} id={tab.id}>
+                                                {tab.label}
+                                                <Tabs.Indicator />
+                                            </Tabs.Tab>
+                                        ))}
+                                    </Tabs.List>
+                                </Tabs.ListContainer>
                                 <Tabs.Panel className="pt-4" id="both">
                                     <Foot3DPlaceholder footSide="both" isActive={isActive} />
                                 </Tabs.Panel>
