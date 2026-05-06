@@ -35,3 +35,38 @@ Si vous ne voulez pas le mode développement :
 npm run build
 npm run start
 ```
+
+## Schéma de la base de données
+
+```mermaid
+classDiagram
+    class Semelle {
+        +id: int
+        +side: varchar
+    }
+    class Mesure {
+        +id: int
+        +semelle_id: int
+        +time: Timestamp
+        +pos: text|null
+        +flexi1_press: bool
+        +flexi2_press: bool
+        +flexi3_press: bool
+        +accel_x: float
+        +accel_y: float
+        +accel_z: float
+        +angle_1: float
+        +angle_2: float
+        +angle_3: float
+        +enregistrement_id: int
+    }
+
+    class Enregistrement {
+        +id: int
+        +heureDebut: DateTime
+        +heureFin: DateTime|null
+    }
+
+    Enregistrement --> Mesure
+    Semelle --> Mesure
+```
