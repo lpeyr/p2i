@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, Card, CardHeader, Chip, Separator } from "@heroui/react";
+import { Button, Card, CardHeader, Chip, Separator, Tabs } from "@heroui/react";
 import { useState } from "react";
 import { Pause, Play, Square } from "@gravity-ui/icons";
 
@@ -57,14 +57,12 @@ export default function ActivityPage() {
     };
 
     return (
-        <main className="bg-background min-h-screen p-8">
+        <main className="min-h-screen p-8">
             <div className="mx-auto max-w-7xl space-y-8">
                 {/* Header */}
                 <section className="flex items-center justify-between">
                     <div className="space-y-2">
-                        <h1 className="text-foreground text-4xl font-bold">
-                            Activité en Temps Réel
-                        </h1>
+                        <h1 className="text-4xl font-bold">Activité en Temps Réel</h1>
                         <p className="text-muted-foreground text-lg">
                             Suivez votre marche et analysez vos données en direct
                         </p>
@@ -79,14 +77,14 @@ export default function ActivityPage() {
                             size="lg"
                             onClick={() => setIsActive(!isActive)}
                         >
-                            {!isActive ? (
-                                <>
-                                    <Play /> Commencer
-                                </>
-                            ) : (
+                            {isActive ? (
                                 <>
                                     <Pause />
                                     Pause
+                                </>
+                            ) : (
+                                <>
+                                    <Play /> Commencer
                                 </>
                             )}
                         </Button>
@@ -111,9 +109,7 @@ export default function ActivityPage() {
 
                 {/* Real-time Stats */}
                 <section className="space-y-4">
-                    <h2 className="text-foreground text-2xl font-semibold">
-                        Statistiques en Temps Réel
-                    </h2>
+                    <h2 className="text-2xl font-semibold">Statistiques en Temps Réel</h2>
                     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                         <StatCard
                             label="Pas"
@@ -143,14 +139,12 @@ export default function ActivityPage() {
                 <section className="grid gap-6 lg:grid-cols-3">
                     {/* GPS Tracker */}
                     <div className="space-y-4 lg:col-span-2">
-                        <h2 className="text-foreground text-2xl font-semibold">Tracé GPS</h2>
-                        <Card className="from-default-50 to-default-100 border-separator overflow-hidden border bg-linear-to-br">
+                        <h2 className="text-2xl font-semibold">Tracé GPS</h2>
+                        <Card className="border-separator overflow-hidden border">
                             <CardHeader className="flex flex-col gap-3">
                                 <div className="flex items-center justify-between">
                                     <div>
-                                        <p className="text-foreground font-semibold">
-                                            Itinéraire en direct
-                                        </p>
+                                        <p className="font-semibold">Itinéraire en direct</p>
                                         <p className="text-muted-foreground text-sm">
                                             Visualisation de votre trajet
                                         </p>
@@ -165,9 +159,9 @@ export default function ActivityPage() {
                                 </div>
                             </CardHeader>
                             <Separator />
-                            <div className="bg-default-100 flex h-96 items-center justify-center">
+                            <div className="flex h-96 items-center justify-center">
                                 <div className="space-y-3 text-center">
-                                    <div className="bg-primary-100 mx-auto flex h-16 w-16 items-center justify-center rounded-full">
+                                    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full">
                                         <div className="bg-primary-200 h-12 w-12 animate-pulse rounded-full"></div>
                                     </div>
                                     <p className="text-muted-foreground">
@@ -182,9 +176,7 @@ export default function ActivityPage() {
 
                     {/* Foot Pressure Visualizer */}
                     <div className="space-y-4">
-                        <h2 className="text-foreground text-2xl font-semibold">
-                            Pression des Pieds
-                        </h2>
+                        <h2 className="text-2xl font-semibold">Pression des Pieds</h2>
                         <PressureVisualizer
                             leftPressure={activityData.leftFootPressure}
                             rightPressure={activityData.rightFootPressure}
@@ -194,50 +186,58 @@ export default function ActivityPage() {
 
                 {/* 3D Foot Visualization */}
                 <section className="space-y-4">
-                    <h2 className="text-foreground text-2xl font-semibold">
-                        Visualisation 3D en Temps Réel
-                    </h2>
-                    <Card className="from-default-50 to-default-100 border-separator overflow-hidden border bg-linear-to-br">
+                    <h2 className="text-2xl font-semibold">Visualisation 3D en Temps Réel</h2>
+                    <Card className="border-separator overflow-hidden border">
                         <div className="space-y-4 p-0">
-                            <div className="border-separator flex gap-2 border-b px-4">
-                                {[
-                                    { id: "both", label: "Les Deux Pieds", side: "both" as const },
-                                    { id: "left", label: "Pied Gauche", side: "left" as const },
-                                    { id: "right", label: "Pied Droit", side: "right" as const },
-                                ].map((tab) => (
-                                    <button
-                                        key={tab.id}
-                                        className="text-muted-foreground hover:text-foreground hover:border-primary border-b-2 border-transparent px-4 py-2 text-sm font-medium transition-colors"
-                                    >
-                                        {tab.label}
-                                    </button>
-                                ))}
-                            </div>
-                            <div className="px-4">
-                                <Foot3DPlaceholder footSide="both" isActive={isActive} />
-                            </div>
+                            <Tabs>
+                                <Tabs.List aria-label="Options">
+                                    {[
+                                        {
+                                            id: "both",
+                                            label: "Les Deux Pieds",
+                                            side: "both" as const,
+                                        },
+                                        { id: "left", label: "Pied Gauche", side: "left" as const },
+                                        {
+                                            id: "right",
+                                            label: "Pied Droit",
+                                            side: "right" as const,
+                                        },
+                                    ].map((tab) => (
+                                        <Tabs.Tab key={tab.id} id={tab.id}>
+                                            {tab.label}
+                                        </Tabs.Tab>
+                                    ))}
+                                </Tabs.List>
+                                <Tabs.Panel className="pt-4" id="both">
+                                    <Foot3DPlaceholder footSide="both" isActive={isActive} />
+                                </Tabs.Panel>
+                                <Tabs.Panel className="pt-4" id="left">
+                                    <Foot3DPlaceholder footSide="both" isActive={isActive} />
+                                </Tabs.Panel>
+                                <Tabs.Panel className="pt-4" id="right">
+                                    <Foot3DPlaceholder footSide="both" isActive={isActive} />
+                                </Tabs.Panel>
+                            </Tabs>
                         </div>
                     </Card>
                 </section>
 
                 {/* Data Stream Info */}
                 <section className="space-y-4">
-                    <h2 className="text-foreground text-2xl font-semibold">Informations</h2>
-                    <Card className="border-separator from-default-50 to-default-100 border bg-linear-to-br">
+                    <h2 className="text-2xl font-semibold">Informations</h2>
+                    <Card className="border-separator border">
                         <div className="gap-4 p-6">
                             <p className="text-muted-foreground">
-                                <span className="text-foreground font-semibold">État SSE :</span>{" "}
-                                Connecté et prêt
+                                <span className="font-semibold">État SSE :</span> Connecté et prêt
                             </p>
                             <p className="text-muted-foreground">
-                                <span className="text-foreground font-semibold">
-                                    Semelles détectées :
-                                </span>{" "}
-                                2 (Gauche ✓, Droite ✓)
+                                <span className="font-semibold">Semelles détectées :</span> 2
+                                (Gauche ✓, Droite ✓)
                             </p>
                             <p className="text-muted-foreground">
-                                <span className="text-foreground font-semibold">Résolution :</span>{" "}
-                                Données mises à jour chaque seconde
+                                <span className="font-semibold">Résolution :</span> Données mises à
+                                jour chaque seconde
                             </p>
                         </div>
                     </Card>
@@ -250,7 +250,7 @@ export default function ActivityPage() {
 /* Composant réutilisable pour les cartes de stats */
 function StatCard({ label, value, unit, color = "text-primary" }: Readonly<StatItemProps>) {
     return (
-        <Card className="border-separator from-default-50 to-default-100 border bg-linear-to-br">
+        <Card className="border-separator border">
             <div className="gap-2 p-6">
                 <p className="text-muted-foreground text-sm font-medium">{label}</p>
                 <div className="flex items-baseline gap-1">
@@ -282,7 +282,7 @@ function PressureVisualizer({ leftPressure, rightPressure }: Readonly<PressureVi
             <Card className="border-separator from-default-50 to-default-100 border bg-linear-to-br">
                 <div className="gap-3 p-6">
                     <div className="mb-2 flex items-center justify-between">
-                        <p className="text-foreground font-semibold">Pied Gauche</p>
+                        <p className="font-semibold">Pied Gauche</p>
                         <p className={`text-lg font-bold ${getTextColorByPressure(leftPressure)}`}>
                             {leftPressure.toFixed(1)}%
                         </p>
@@ -300,7 +300,7 @@ function PressureVisualizer({ leftPressure, rightPressure }: Readonly<PressureVi
             <Card className="border-separator from-default-50 to-default-100 border bg-linear-to-br">
                 <div className="gap-3 p-6">
                     <div className="mb-2 flex items-center justify-between">
-                        <p className="text-foreground font-semibold">Pied Droit</p>
+                        <p className="font-semibold">Pied Droit</p>
                         <p className={`text-lg font-bold ${getTextColorByPressure(rightPressure)}`}>
                             {rightPressure.toFixed(1)}%
                         </p>
@@ -336,11 +336,11 @@ function Foot3DPlaceholder({ footSide, isActive }: Readonly<Foot3DPlaceholderPro
     };
 
     return (
-        <div className="bg-default-100 flex h-96 flex-col items-center justify-center rounded-lg p-6">
+        <div className="flex h-96 flex-col items-center justify-center rounded-lg p-6">
             <div className="space-y-4 text-center">
                 <div className="bg-secondary-100 mx-auto h-20 w-20 animate-pulse rounded-full"></div>
                 <div className="space-y-2">
-                    <p className="text-foreground font-semibold">{getFootLabel()}</p>
+                    <p className="font-semibold">{getFootLabel()}</p>
                     <p className="text-muted-foreground text-sm">
                         {isActive
                             ? "Rendu 3D en direct..."
