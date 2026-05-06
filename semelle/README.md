@@ -1,36 +1,72 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Semelle
 
-## Getting Started
+Semelle est l'application permettant de suivre les informations mesurées en temps réel par nos deux semelles, dans le
+cadre de notre projet P2I.
 
-First, run the development server:
+## Technologies utilisées
+
+- React : pour la création de l'interface utilisateur.
+- Next.js : pour le rendu côté serveur et la génération de pages statiques.
+- Tailwind CSS : pour la mise en forme et le design de l'application.
+- HeroUI : pour les composants d'interface utilisateur.
+- MariaDB : pour la gestion de la base de données.
+
+## Installation
+
+Pour installer Semelle, il suffit de cloner ce dépôt et d'installer les dépendances nécessaires à son fonctionnement.
+
+```bash
+git clone https://github.com/lpeyr/p2i
+cd p2i/semelle
+npm install
+```
+
+## Utilisation
+
+Pour lancer l'application, il suffit d'exécuter la commande suivante dans le terminal :
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Si vous ne voulez pas le mode développement :
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm run build
+npm run start
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Schéma de la base de données
 
-## Learn More
+```mermaid
+classDiagram
+    class Semelle {
+        +id: int
+        +side: varchar
+    }
+    class Mesure {
+        +id: int
+        +semelle_id: int
+        +time: Timestamp
+        +pos: text|null
+        +flexi1_press: bool
+        +flexi2_press: bool
+        +flexi3_press: bool
+        +accel_x: float
+        +accel_y: float
+        +accel_z: float
+        +angle_1: float
+        +angle_2: float
+        +angle_3: float
+        +enregistrement_id: int
+    }
 
-To learn more about Next.js, take a look at the following resources:
+    class Enregistrement {
+        +id: int
+        +heureDebut: DateTime
+        +heureFin: DateTime|null
+    }
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+    Enregistrement --> Mesure
+    Semelle --> Mesure
+```
