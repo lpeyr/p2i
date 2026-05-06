@@ -8,14 +8,14 @@
 #define flexi3 A2
 #define nb_mesures 20
 
-// ✅ Struct définie EN PREMIER
-typedef struct __attribute__((packed)) {
-  int16_t flexiforce1[20];
-  int16_t flexiforce2[20];
-  int16_t flexiforce3[20];
-} Tramet;
 
-// ✅ Variables globales APRÈS la struct
+typedef struct __attribute__((packed)) {
+  int16_t flexiforce1[nb_mesures]; // 2octets x 20 => 40
+  int16_t flexiforce2[nb_mesures];
+  int16_t flexiforce3[nb_mesures];
+} Tramet; //120octets
+
+
 LoRaModem modem;
 Tramet trame;
 int nb_mesure_actuel = 0;
@@ -46,17 +46,18 @@ void loop() {
   trame.flexiforce1[nb_mesure_actuel] = analogRead(flexi1);
   trame.flexiforce2[nb_mesure_actuel] = analogRead(flexi2);
   trame.flexiforce3[nb_mesure_actuel] = analogRead(flexi3);
-  nb_mesure_actuel++;  // ✅ orthographe correcte
+  nb_mesure_actuel++;
 
   if (nb_mesure_actuel >= nb_mesures) {
     modem.setADR(false);
+    modem.dataRate(4);// 222 octets
     modem.beginPacket();
-    modem.write((uint8_t*)&trame, sizeof(trame));
+    modem.write((uint8_t*)&trame, sizeof(trame)); //envoie
     int err = modem.endPacket();
 
     if (err > 0) {
       Serial.println("Message envoyé correctement");
-      for (int i = 0; i < nb_mesures; i++) {  // ✅ boucle pour afficher
+      for (int i = 0; i < nb_mesures; i++) { 
         Serial.print(trame.flexiforce1[i]); Serial.print(" / ");
         Serial.print(trame.flexiforce2[i]); Serial.print(" / ");
         Serial.println(trame.flexiforce3[i]);
@@ -65,8 +66,8 @@ void loop() {
       Serial.println("Erreur d'envoi");
     }
 
-    nb_mesure_actuel = 0;  // ✅ remise à zéro dans les deux cas
+    nb_mesure_actuel = 0;
   }
 
-  delay(1000);
+  delay((int)(25000/nb_mesures));
 }
