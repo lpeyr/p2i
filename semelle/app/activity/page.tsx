@@ -3,6 +3,11 @@
 import { Button, Card, CardHeader, Chip, Separator, Tabs } from "@heroui/react";
 import { useState } from "react";
 import { Pause, Play, Square } from "@gravity-ui/icons";
+import dynamic from "next/dynamic";
+
+const MapView = dynamic(() => import("./../../components/map"), {
+    ssr: false,
+});
 
 interface ActivityData {
     steps: number;
@@ -55,6 +60,8 @@ export default function ActivityPage() {
             second: "2-digit",
         });
     };
+
+    const route: [number, number][] = [[45.782562, 4.872407]];
 
     return (
         <main className="min-h-screen p-8">
@@ -159,17 +166,8 @@ export default function ActivityPage() {
                                 </div>
                             </CardHeader>
                             <Separator />
-                            <div className="flex h-96 items-center justify-center">
-                                <div className="space-y-3 text-center">
-                                    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full">
-                                        <div className="h-12 w-12 animate-pulse rounded-full"></div>
-                                    </div>
-                                    <p className="text-muted-foreground">
-                                        {isActive
-                                            ? "Acquisition du tracé GPS en cours..."
-                                            : "Démarrez une session pour voir le tracé"}
-                                    </p>
-                                </div>
+                            <div className="">
+                                <MapView route={route} />
                             </div>
                         </Card>
                     </div>

@@ -8,7 +8,7 @@ export default function NavBar() {
     const pathname = usePathname();
 
     return (
-        <nav className="border-background-tertiary bg-background/60 dark:bg-background-secondary/60 fixed bottom-0 m-5 self-center rounded-4xl border p-3 shadow-md backdrop-blur-lg dark:border-2">
+        <nav className="border-background-tertiary bg-background/60 dark:bg-background-secondary/60 fixed bottom-0 z-60 m-5 self-center rounded-4xl border p-3 shadow-md backdrop-blur-lg dark:border-2">
             <div className="grid grid-cols-3 items-center justify-center space-x-2">
                 <Link href="/">
                     <Button
