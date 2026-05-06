@@ -162,7 +162,7 @@ export default function ActivityPage() {
                             <div className="flex h-96 items-center justify-center">
                                 <div className="space-y-3 text-center">
                                     <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full">
-                                        <div className="bg-primary-200 h-12 w-12 animate-pulse rounded-full"></div>
+                                        <div className="h-12 w-12 animate-pulse rounded-full"></div>
                                     </div>
                                     <p className="text-muted-foreground">
                                         {isActive
@@ -279,7 +279,7 @@ function PressureVisualizer({ leftPressure, rightPressure }: Readonly<PressureVi
     return (
         <div className="space-y-4">
             {/* Left Foot */}
-            <Card className="border-separator from-default-50 to-default-100 border bg-linear-to-br">
+            <Card className="border-separator border">
                 <div className="gap-3 p-6">
                     <div className="mb-2 flex items-center justify-between">
                         <p className="font-semibold">Pied Gauche</p>
@@ -297,7 +297,7 @@ function PressureVisualizer({ leftPressure, rightPressure }: Readonly<PressureVi
             </Card>
 
             {/* Right Foot */}
-            <Card className="border-separator from-default-50 to-default-100 border bg-linear-to-br">
+            <Card className="border-separator border">
                 <div className="gap-3 p-6">
                     <div className="mb-2 flex items-center justify-between">
                         <p className="font-semibold">Pied Droit</p>
