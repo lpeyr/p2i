@@ -12,7 +12,7 @@ export default function NavBar() {
             <div className="grid grid-cols-3 items-center justify-center space-x-2">
                 <Link href="/">
                     <Button
-                        variant={pathname === "/" ? "primary" : "secondary"}
+                        variant={pathname === "/" ? "primary" : "ghost"}
                         className="flex h-auto w-full flex-col items-center space-y-0 py-2"
                     >
                         <House className="m-0 -mb-1 h-6 w-6 p-0" />
@@ -21,7 +21,7 @@ export default function NavBar() {
                 </Link>
                 <Link href="/activity">
                     <Button
-                        variant={pathname === "/activity" ? "primary" : "secondary"}
+                        variant={pathname === "/activity" ? "primary" : "ghost"}
                         className="flex h-auto w-full flex-col items-center space-y-0 py-2"
                     >
                         <Person className="m-0 -mb-1 h-6 w-6 p-0" />
@@ -30,7 +30,7 @@ export default function NavBar() {
                 </Link>
                 <Link href="/history">
                     <Button
-                        variant={pathname === "/history" ? "primary" : "secondary"}
+                        variant={pathname === "/history" ? "primary" : "ghost"}
                         className="flex h-auto w-full flex-col items-center space-y-0 py-2"
                     >
                         <Clock className="m-0 -mb-1 h-6 w-6 p-0" />
