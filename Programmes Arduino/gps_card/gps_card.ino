@@ -1,29 +1,52 @@
 #include <Arduino.h>
 #include <MKRWAN.h>
 
-#define SECRET_APP_EUI "221C221C221C221C"
-#define SECRET_APP_KEY "A1B2C3A1B2C3D4E5F6D4E5F677889900"
-#define flexi1 A0
-#define flexi2 A1
-#define flexi3 A2
-#define nb_mesures 20
-
+#define SECRET_APP_EUI  "221C221C221C221C"
+#define SECRET_APP_KEY  "A1B2C3A1B2C3D4E5F6D4E5F677889900"
+#define flexi1          A0
+#define flexi2          A1
+#define flexi3          A2
+#define nb_mesures      120
+#define DUREE_TOTALE_MS 60000
+#define SEUIL           950
+#define TAILLE_PAYLOAD  8
 
 typedef struct __attribute__((packed)) {
-  int16_t flexiforce1[nb_mesures]; // 2octets x 20 => 40
-  int16_t flexiforce2[nb_mesures];
-  int16_t flexiforce3[nb_mesures];
-} Tramet; //120octets
-
+  uint8_t bits[TAILLE_PAYLOAD];
+} Tramet; // test
 
 LoRaModem modem;
 Tramet trame;
 int nb_mesure_actuel = 0;
 
+void setBit(uint8_t* tableau, int pos, bool valeur) {
+  int octet = pos / 8;
+  int bit   = pos % 8;
+  if (valeur)
+    tableau[octet] |=  (1 << bit);
+  else
+    tableau[octet] &= ~(1 << bit);
+}
+
+// Fait clignoter la LED D6 (LED_BUILTIN) nb_fois fois
+void clignote(int nb_fois, int duree_ms) {
+  for (int i = 0; i < nb_fois; i++) {
+    digitalWrite(LED_BUILTIN, HIGH);  // allumée
+    delay(duree_ms);
+    digitalWrite(LED_BUILTIN, LOW);   // éteinte
+    delay(duree_ms);
+  }
+}
+
 void setup() {
   pinMode(flexi1, INPUT);
   pinMode(flexi2, INPUT);
   pinMode(flexi3, INPUT);
+
+  // D6 = LED_BUILTIN selon datasheet MKR WAN 1310
+  pinMode(LED_BUILTIN, OUTPUT);
+  digitalWrite(LED_BUILTIN, LOW);  // éteinte au démarrage
+
   Serial.begin(9600);
 
   bool lora_on = modem.begin(EU868);
@@ -35,39 +58,62 @@ void setup() {
   Serial.flush();
 
   bool connected_to_lorawan = modem.joinOTAA(SECRET_APP_EUI, SECRET_APP_KEY);
-  if (connected_to_lorawan) Serial.println(F("Connexion au réseau LoRaWAN ... Ok"));
-  else Serial.println(F("Connexion au réseau LoRaWAN ... Echec"));
+  if (connected_to_lorawan) {
+    Serial.println(F("Connexion au réseau LoRaWAN ... Ok"));
+    clignote(1, 1000);  // 1 clignotement long = connexion OK
+  } else {
+    Serial.println(F("Connexion au réseau LoRaWAN ... Echec"));
+    clignote(5, 100);   // 5 clignotements rapides = connexion échouée
+  }
 
   Serial.println(F("Mon DevAddr est :"));
   Serial.println(modem.getDevAddr());
+
+  memset(trame.bits, 0, sizeof(trame.bits));
 }
 
 void loop() {
-  trame.flexiforce1[nb_mesure_actuel] = analogRead(flexi1);
-  trame.flexiforce2[nb_mesure_actuel] = analogRead(flexi2);
-  trame.flexiforce3[nb_mesure_actuel] = analogRead(flexi3);
+  bool val1 = analogRead(flexi1) < SEUIL;
+  bool val2 = analogRead(flexi2) < SEUIL;
+  bool val3 = analogRead(flexi3) < SEUIL;
+
+  setBit(trame.bits, nb_mesure_actuel,      val1);
+  setBit(trame.bits, nb_mesure_actuel + 20, val2);
+  setBit(trame.bits, nb_mesure_actuel + 40, val3);
+
+  Serial.print("Mesure "); Serial.print(nb_mesure_actuel + 1);
+  Serial.print("/"); Serial.print(nb_mesures);
+  Serial.print(" → f1:"); Serial.print(val1);
+  Serial.print(" f2:"); Serial.print(val2);
+  Serial.print(" f3:"); Serial.println(val3);
+
   nb_mesure_actuel++;
 
   if (nb_mesure_actuel >= nb_mesures) {
     modem.setADR(false);
-    modem.dataRate(1);// 222 octets
+    modem.dataRate(3); 
     modem.beginPacket();
-    modem.write((uint8_t*)&trame, sizeof(trame)); //envoie
+    modem.write(trame.bits, sizeof(trame.bits));
     int err = modem.endPacket();
 
     if (err > 0) {
-      Serial.println("Message envoyé correctement");
-      for (int i = 0; i < nb_mesures; i++) { 
-        Serial.print(trame.flexiforce1[i]); Serial.print(" / ");
-        Serial.print(trame.flexiforce2[i]); Serial.print(" / ");
-        Serial.println(trame.flexiforce3[i]);
+      Serial.println("=== Envoi OK ! ===");
+      clignote(1, 500);   // 1 clignotement lent = envoi réussi ✅
+      for (int i = 0; i < nb_mesures; i++) {
+        Serial.print("Mesure "); Serial.print(i + 1);
+        Serial.print(" → f1:"); Serial.print((trame.bits[i / 8] >> (i % 8)) & 1);
+        Serial.print(" f2:"); Serial.print((trame.bits[(i + 20) / 8] >> ((i + 20) % 8)) & 1);
+        Serial.print(" f3:"); Serial.println((trame.bits[(i + 40) / 8] >> ((i + 40) % 8)) & 1);
       }
     } else {
       Serial.println("Erreur d'envoi");
+      clignote(3, 100);   // 3 clignotements rapides = envoi échoué ❌
+      Serial.println(err);
     }
 
+    memset(trame.bits, 0, sizeof(trame.bits));
     nb_mesure_actuel = 0;
   }
 
-  delay((int)(25000/nb_mesures));
+  delay(DUREE_TOTALE_MS / nb_mesures);
 }
