@@ -50,7 +50,7 @@ void loop() {
 
   if (nb_mesure_actuel >= nb_mesures) {
     modem.setADR(false);
-    modem.dataRate(4);// 222 octets
+    modem.dataRate(1);// 222 octets
     modem.beginPacket();
     modem.write((uint8_t*)&trame, sizeof(trame)); //envoie
     int err = modem.endPacket();
