@@ -1,0 +1,31 @@
+name: Build Next.js Site
+on:
+  push:
+  pull_request:
+    branches:
+      - main
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: semelle
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24.x
+      - name: Install dependencies
+        run: npm i
+
+      - name: Prettier
+        run: npm run prettier:check
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
