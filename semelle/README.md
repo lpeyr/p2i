@@ -38,60 +38,7 @@ npm run start
 
 ## Schéma de la base de données
 
-```mermaid
-classDiagram
-    class Utilisateur {
-        +id: int
-        +nom: varchar
-        +prenom: varchar
-    }
-    class Semelle {
-        +id: int
-        +side: varchar
-    }
-    class MesureFlexi {
-        +id: int
-        +semelle_id: int
-        +time: Timestamp
-        +flexi1_press: bool
-        +flexi2_press: bool
-        +flexi3_press: bool
-        +enregistrement_id: int
-    }
-
-    class MesureIMU {
-        +id: int
-        +semelle_id: int
-        +time: Timestamp
-        +accel: float
-        +yaw: float
-        +pitch: float
-        +roll: float
-        +session_id: int
-    }
-
-    class MesureGPS {
-        +id: int
-        +semelle_id: int
-        +time: Timestamp
-        +latitude: float
-        +longitude: float
-        +enregistrement_id: int
-    }
-
-    class Session {
-        +id: int
-        +heureDebut: DateTime
-        +heureFin: DateTime|null
-    }
-
-    Enregistrement --> MesureFlexi
-    Semelle --> MesureFlexi
-    Enregistrement --> MesureIMU
-    Semelle --> MesureIMU
-    Enregistrement --> MesureGPS
-    Semelle --> MesureGPS
-```
+![Schéma de la base de données](./../bdd/Schema%20BDD%20Semelle.drawio.svg)
 
 Au vu des contraintes liées au protocole LoRaWAN, nous avons choisi de limiter au maximum les données transmises, quitte
 à renier sur la partie "en temps réel".
