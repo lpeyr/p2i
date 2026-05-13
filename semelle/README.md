@@ -40,6 +40,11 @@ npm run start
 
 ```mermaid
 classDiagram
+    class Utilisateur {
+        +id: int
+        +nom: varchar
+        +prenom: varchar
+    }
     class Semelle {
         +id: int
         +side: varchar
@@ -58,13 +63,11 @@ classDiagram
         +id: int
         +semelle_id: int
         +time: Timestamp
-        +acc_x: float
-        +acc_y: float
-        +acc_z: float
-        +gyro_x: float
-        +gyro_y: float
-        +gyro_z: float
-        +enregistrement_id: int
+        +accel: float
+        +yaw: float
+        +pitch: float
+        +roll: float
+        +session_id: int
     }
 
     class MesureGPS {
@@ -76,7 +79,7 @@ classDiagram
         +enregistrement_id: int
     }
 
-    class Enregistrement {
+    class Session {
         +id: int
         +heureDebut: DateTime
         +heureFin: DateTime|null
