@@ -38,35 +38,20 @@ npm run start
 
 ## Schéma de la base de données
 
-```mermaid
-classDiagram
-    class Semelle {
-        +id: int
-        +side: varchar
-    }
-    class Mesure {
-        +id: int
-        +semelle_id: int
-        +time: Timestamp
-        +pos: text|null
-        +flexi1_press: bool
-        +flexi2_press: bool
-        +flexi3_press: bool
-        +accel_x: float
-        +accel_y: float
-        +accel_z: float
-        +angle_1: float
-        +angle_2: float
-        +angle_3: float
-        +enregistrement_id: int
-    }
+![Schéma de la base de données](./../bdd/Schema%20BDD%20Semelle.drawio.svg)
 
-    class Enregistrement {
-        +id: int
-        +heureDebut: DateTime
-        +heureFin: DateTime|null
-    }
+Au vu des contraintes liées au protocole LoRaWAN, nous avons choisi de limiter au maximum les données transmises, quitte
+à renier sur la partie "en temps réel".
+En effet, pour réaliser un suivi qualitatif de la marche, il est nécessaire de réaliser une acquisition au niveau de
+l'IMU d'une fréquence de 2 à 5Hz, ce qui est incompatible avec les contraintes de LoRaWAN. Nous avons donc choisi de
+faire en sorte que les semelles stockent les données mesurées en local, et de les transmettre à l'application Semelle
+petit à petit, au fur et à mesure que les données sont mesurées. Ainsi, nous pouvons garantir une acquisition de
+qualité, tout en respectant les contraintes de LoRaWAN.
 
-    Enregistrement --> Mesure
-    Semelle --> Mesure
-```
+Pour reconsistituer les données mesurées, nous allons effectuer un moyennage sur les différentes "étapes" de la marche,
+en utilisant les données de flexion pour détecter les différentes phases (appui, décollage, etc.). Nous
+pourrons ainsi reconstituer le trajet du pied, et analyser les différentes phases de la marche.
+
+Il est donc nécessaire de stocker les données mesurées par chaque capteur dans une table spécifique, car chaque capteur
+a une fréquence d'acquisition différente, et il est nécessaire de pouvoir les différencier pour pouvoir les analyser
+correctement.
