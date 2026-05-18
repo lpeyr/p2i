@@ -1,25 +1,25 @@
 #include <SPI.h>
 #include <LoRa.h>
 
-// 120 bits = 15 octets
-#define NB_BITS     120
-#define NB_OCTETS   (NB_BITS / 8)  // 15
+int preambleLength = 8;
+int frequency      = 862e6;
+int SF             = 8;
+int BW             = 125E3;
+int CR             = 5;
+int power          = 10;
 
-// Paramètres LoRa (adapter num_gp selon ton groupe)
-#define FREQUENCY   862e6
-#define SF          8
-#define BW          125E3
-#define CR          5
-#define POWER       10
+#define NB_BITS   120
+#define NB_OCTETS (NB_BITS / 8)  // 15 octets par flexiforce
 
 typedef struct __attribute__((packed)) {
-  uint8_t bits[NB_OCTETS];  // 15 octets = 120 bits
-} Trame_test;
+  uint8_t bits_f1[NB_OCTETS];  // 15 octets
+  uint8_t bits_f2[NB_OCTETS];  // 15 octets
+  uint8_t bits_f3[NB_OCTETS];  // 15 octets
+} Trame_flexi;                  // total : 45 octets
 
-Trame_test trame;
+Trame_flexi trame;
 int compteur = 0;
 
-// --- Utilitaires bits ---
 void setBit(uint8_t* tableau, int pos, bool valeur) {
   int octet = pos / 8;
   int bit   = pos % 8;
@@ -31,50 +31,64 @@ bool getBit(uint8_t* tableau, int pos) {
   return (tableau[pos / 8] >> (pos % 8)) & 1;
 }
 
+void afficherBits(uint8_t* tableau, const char* nom) {
+  Serial.print(nom); Serial.print(" : ");
+  for (int i = 0; i < NB_BITS; i++) {
+    Serial.print(getBit(tableau, i));
+    if ((i + 1) % 8 == 0) Serial.print(" ");
+  }
+  Serial.println();
+}
+
 void setup() {
   Serial.begin(9600);
   delay(2000);
-  Serial.println("=== TX Test - 120 bits ===");
+  Serial.println("=== TX Flexi - 3x120 bits ===");
 
-  if (!LoRa.begin(FREQUENCY)) {
+  if (!LoRa.begin(frequency)) {
     Serial.println("Erreur démarrage LoRa !");
     while (true);
   }
 
-  LoRa.setTxPower(POWER);
+  LoRa.setTxPower(power);
+  LoRa.setPreambleLength(preambleLength);
   LoRa.setSpreadingFactor(SF);
   LoRa.setSignalBandwidth(BW);
   LoRa.setCodingRate4(CR);
-  LoRa.setPreambleLength(8);
 
-  Serial.println("LoRa OK !");
+  Serial.print("Taille trame : ");
+  Serial.print(sizeof(Trame_flexi));
+  Serial.println(" octets");
 
-  // Remplissage test : alternance 0/1
+  // --- Simulation des 3 flexiforces ---
   memset(&trame, 0, sizeof(trame));
-  for (int i = 0; i < NB_BITS; i++) {
-    setBit(trame.bits, i, i % 2 == 0);
-  }
+
+  // F1 : toujours appuyé → tous les bits à 1
+  for (int i = 0; i < NB_BITS; i++) setBit(trame.bits_f1, i, true);
+
+  // F2 : alternance 0/1 → appui intermittent
+  for (int i = 0; i < NB_BITS; i++) setBit(trame.bits_f2, i, i % 2 == 0);
+
+  // F3 : jamais appuyé → tous les bits à 0 (déjà fait par memset)
 }
 
 void loop() {
-  // Affichage des bits avant envoi
-  Serial.print("Envoi paquet #"); Serial.print(compteur);
-  Serial.print(" | bits[0..7] = ");
-  for (int i = 0; i < 8; i++) Serial.print(getBit(trame.bits, i));
-  Serial.println();
+  Serial.print("\n--- Paquet #"); Serial.print(compteur); Serial.println(" ---");
+  afficherBits(trame.bits_f1, "F1");
+  afficherBits(trame.bits_f2, "F2");
+  afficherBits(trame.bits_f3, "F3");
 
-  // Envoi de la struct brute
   unsigned long t0 = micros();
   LoRa.beginPacket();
-  LoRa.write((uint8_t*)&trame, sizeof(trame));  // 15 octets
+  LoRa.write((uint8_t*)&trame, sizeof(trame));
   bool ok = LoRa.endPacket();
   float duree = (micros() - t0) / 1000.0;
 
   if (ok) {
-    Serial.print("  OK | Temps TX : ");
+    Serial.print("Envoi OK | Temps TX : ");
     Serial.print(duree); Serial.println(" ms");
   } else {
-    Serial.println("  ECHEC envoi");
+    Serial.println("Echec envoi");
   }
 
   compteur++;

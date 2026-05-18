@@ -3,28 +3,47 @@
 
 
 int preambleLength = 8;
-int frequency      = 862e6
+int frequency      = 862e6;
 int SF             = 8;
 int BW             = 125E3;
 int CR             = 5;
 
-// Structure identique au TX
 #define NB_BITS   120
-#define NB_OCTETS (NB_BITS / 8)  // 15
+#define NB_OCTETS (NB_BITS / 8)
 
 typedef struct __attribute__((packed)) {
-  uint8_t bits[NB_OCTETS];
-} Trame_test;
+  uint8_t bits_f1[NB_OCTETS];
+  uint8_t bits_f2[NB_OCTETS];
+  uint8_t bits_f3[NB_OCTETS];
+} Trame_flexi;
 
-// --- Utilitaire ---
 bool getBit(uint8_t* tableau, int pos) {
   return (tableau[pos / 8] >> (pos % 8)) & 1;
+}
+
+// Compte le nombre de bits à 1 (= nb de fois où le capteur est appuyé)
+int compterAppuis(uint8_t* tableau) {
+  int count = 0;
+  for (int i = 0; i < NB_BITS; i++)
+    if (getBit(tableau, i)) count++;
+  return count;
+}
+
+void afficherBits(uint8_t* tableau, const char* nom) {
+  Serial.print(nom); Serial.print(" : ");
+  for (int i = 0; i < NB_BITS; i++) {
+    Serial.print(getBit(tableau, i));
+    if ((i + 1) % 8 == 0) Serial.print(" ");
+  }
+  Serial.print("  → appuis : ");
+  Serial.print(compterAppuis(tableau));
+  Serial.print("/"); Serial.println(NB_BITS);
 }
 
 void setup() {
   Serial.begin(9600);
   while (!Serial);
-  Serial.println("Je suis le récepteur");
+  Serial.println("Je suis le récepteur - 3x120 bits");
 
   if (!LoRa.begin(frequency)) {
     Serial.println("Problème au démarrage du module LoRa !");
@@ -42,37 +61,22 @@ void setup() {
 void loop() {
   int taille_paquet_recu = LoRa.parsePacket();
 
-  if (taille_paquet_recu == sizeof(Trame_test)) {
+  if (taille_paquet_recu == sizeof(Trame_flexi)) {
 
-    Trame_test trame;
+    Trame_flexi trame;
     LoRa.readBytes((byte*)&trame, sizeof(trame));
 
-    Serial.print("Paquet reçu (");
-    Serial.print(taille_paquet_recu);
-    Serial.print(" octets) | RSSI : ");
-    Serial.print(LoRa.packetRssi());
-    Serial.println(" dBm");
+    Serial.println("\n=== Paquet reçu ===");
+    Serial.print("Taille : "); Serial.print(taille_paquet_recu);
+    Serial.print(" octets | RSSI : ");
+    Serial.print(LoRa.packetRssi()); Serial.println(" dBm");
 
-    // Affichage des 120 bits groupés par octets
-    Serial.print("Bits : ");
-    for (int i = 0; i < NB_BITS; i++) {
-      Serial.print(getBit(trame.bits, i));
-      if ((i + 1) % 8 == 0) Serial.print(" ");
-    }
-    Serial.println();
-
-    // Affichage des 15 octets en hexadécimal
-    Serial.print("Hex  : ");
-    for (int i = 0; i < NB_OCTETS; i++) {
-      if (trame.bits[i] < 0x10) Serial.print("0");
-      Serial.print(trame.bits[i], HEX);
-      Serial.print(" ");
-    }
-    Serial.println();
+    afficherBits(trame.bits_f1, "F1");
+    afficherBits(trame.bits_f2, "F2");
+    afficherBits(trame.bits_f3, "F3");
 
   } else if (taille_paquet_recu > 0) {
-    Serial.print("Paquet reçu mais taille inattendue : ");
-    Serial.print(taille_paquet_recu);
-    Serial.println(" octets — ignoré");
+    Serial.print("Taille inattendue : ");
+    Serial.print(taille_paquet_recu); Serial.println(" octets — ignoré");
   }
 }
