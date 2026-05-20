@@ -16,7 +16,10 @@ Create Table Utilisateur (
 idUser INT(10) UNSIGNED auto_increment Primary key,
 nom varchar(50) NOT NULL,
 prenom varchar(50) NOT NULL,
-role varchar(20) NOT NULL);
+role varchar(20) NOT NULL,
+age INT(10) Unsigned NOT NULL,
+poids INT(10) Unsigned Not NULL,
+taille INT(10) Unsigned NOT NULL);
 
 
 Create Table Semelle 
@@ -44,7 +47,7 @@ Constraint Check (dateFin is NUll or dateFin>dateDebut)
 
 Create Table MesureGPS
 (
-idMesure INT(10) auto_increment Primary Key NOT NULL,
+idMesure INT(10) UNSIGNED auto_increment Primary Key NOT NULL,
 time TIMESTAMP DEFAULT CURRENT_TIMESTAMP(),
 lattitude float,
 longitude float,
@@ -57,7 +60,7 @@ Foreign Key (idSemelle) References Semelle(idSemelle)
 
 Create Table MesureFlexi
 (
-idMesureFlexi INT(10) auto_increment Primary Key NOT NULL,
+idMesureFlexi INT(10) UNSIGNED auto_increment Primary Key NOT NULL,
 time TIMESTAMP DEFAULT CURRENT_TIMESTAMP(),
 flexi1 bool NOT NULL,
 flexi2 bool NOT NULL, 
