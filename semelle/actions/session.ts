@@ -24,6 +24,57 @@ export async function getSession(id: number): Promise<Session> {
     return (await query<Session[]>("SELECT * FROM Session WHERE idSession = ?", [id]))[0];
 }
 
+export interface SessionOverview {
+    idSession: number;
+    dateDebut: string; // ISO
+    durationSeconds: number;
+    step: number;
+    distanceMeters: number;
+}
+
+import totalDistanceMeters from "@/lib/distance";
+
+export async function getAllSessions(): Promise<SessionOverview[]> {
+    const rows = await query<
+        Array<{
+            idSession: number;
+            dateDebut: string;
+            dateFin: string | null;
+            step: number | null;
+            duration_seconds: number;
+        }>
+    >(
+        `SELECT idSession, dateDebut, dateFin, step, TIMESTAMPDIFF(SECOND, dateDebut, COALESCE(dateFin, NOW())) as duration_seconds FROM Session ORDER BY dateDebut DESC`,
+    );
+
+    if (!rows) return [];
+
+    const result: SessionOverview[] = [];
+
+    for (const r of rows) {
+        const gpsRows = await query<Array<{ lattitude: number | null; longitude: number | null }>>(
+            `SELECT lattitude, longitude FROM MesureGPS WHERE idSession = ? ORDER BY time ASC, idMesure ASC`,
+            [r.idSession],
+        );
+
+        const points = (gpsRows || [])
+            .filter((g) => g.lattitude !== null && g.longitude !== null)
+            .map((g) => ({ lat: Number(g.lattitude), lon: Number(g.longitude) }));
+
+        const distanceMeters = totalDistanceMeters(points);
+
+        result.push({
+            idSession: r.idSession,
+            dateDebut: new Date(r.dateDebut).toISOString(),
+            durationSeconds: Number(r.duration_seconds ?? 0),
+            step: Number(r.step ?? 0),
+            distanceMeters,
+        });
+    }
+
+    return result;
+}
+
 export async function getSessionStats(sessionId: number): Promise<SessionStatsBySemelle> {
     const session = await getSession(sessionId);
     if (!session) {
