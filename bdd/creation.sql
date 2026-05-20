@@ -76,9 +76,6 @@ Create Table MesureIMU
 id INT(10) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     time TIMESTAMP DEFAULT CURRENT_TIMESTAMP(),
     accel FLOAT(4,2) Not Null,
-    yaw FLOAT(4,2) Not Null,
-    pitch FLOAT(4,2) Not Null,
-    roll FLOAT(4,2) Not Null,
     idSession INT(10) UNSIGNED NOT NULL,
     idSemelle INT(10) UNSIGNED NOT NULL,
     FOREIGN KEY (idSession) REFERENCES Session(idSession) ,
@@ -87,3 +84,6 @@ id INT(10) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
 
 
 
+DELETE * from MesureFlexi;
+DELETE * from MesureGPS;
+DELETE * from MesureIMU;
