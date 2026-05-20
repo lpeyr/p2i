@@ -1,5 +1,6 @@
-import serial # pip install pyserial
 import json
+import serial  # pip install pyserial
+
 
 def decode_sensor_data(raw_line):
     """
@@ -19,25 +20,11 @@ def decode_sensor_data(raw_line):
         # Try to parse as standard JSON first
         data = json.loads(formatted_line)
         return data
-    except json.JSONDecodeError:
-        try:
-            # If standard JSON fails, try to convert JavaScript-style object to JSON
-            # This regex approach handles common cases
-            import re
+    except json.JSONDecodeError as e:
+        print(f"Error decoding data: {e}")
+        print(f"Raw input: {raw_line}")
+        return None
 
-            # Replace unquoted keys with quoted keys
-            # Matches patterns like "key:" and replaces with "key":"
-            formatted_line = re.sub(r'(\w+):', r'"\1":', formatted_line)
-
-            # Remove any trailing commas before closing braces/brackets
-            formatted_line = re.sub(r',(\s*[}\]])', r'\1', formatted_line)
-
-            data = json.loads(formatted_line)
-            return data
-        except Exception as e:
-            print(f"Error decoding data: {e}")
-            print(f"Raw input: {raw_line}")
-            return None
 
 def display_sensor_data(data):
     """Pretty print the decoded sensor data."""
@@ -62,22 +49,23 @@ def display_sensor_data(data):
 
     print("-------------------\n")
 
+
 # Open COM6
 ser = serial.Serial(
     port='COM6',
-    baudrate=9600,        # Match your device's baud rate
+    baudrate=9600,  # Match your device's baud rate
     bytesize=serial.EIGHTBITS,
     parity=serial.PARITY_NONE,
     stopbits=serial.STOPBITS_ONE,
-    timeout=1             # Read timeout in seconds
+    timeout=1  # Read timeout in seconds
 )
 
 print(f"Connected to {ser.name}")
 
 try:
     while True:
-        if ser.in_waiting > 0:          # Bytes available to read
-            line = ser.readline()        # Read until newline
+        if ser.in_waiting > 0:  # Bytes available to read
+            line = ser.readline()  # Read until newline
             decoded_line = line.decode('utf-8').strip()
 
             # Decode and display sensor data
