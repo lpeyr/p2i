@@ -3,6 +3,12 @@ import serial  # pip install pyserial
 from datetime import datetime
 import mysql.connector as mysql
 from serial.tools import list_ports
+from dotenv import load_dotenv
+import os
+from pathlib import Path
+
+# chemin vers le fichier .env
+
 
 class AppliProd:
 
@@ -21,7 +27,7 @@ class AppliProd:
                 host="fimi-bd-srv1.insa-lyon.fr",
                 port=3306,
                 user="G221_C",  # remplacer par vos propres username
-                password="G221_C",  # remplacer par vos propres password
+                password=db_password,  # remplacer par vos propres password
                 database="G221_C_BD1",  # remplacer par la BD commune de votre groupe
             )
             print("=> Connexion établie...")
@@ -191,6 +197,9 @@ ser = serial.Serial(
 )
 
 print(f"Connected to {ser.name}")
+env_path = Path("../semelle/.env.example")
+load_dotenv(dotenv_path=env_path)
+db_password = os.getenv("DB_PASSWORD")
 instance_prod = AppliProd()
 instance_prod.connexion_bd()
 idSession ,idSemelle= instance_prod.find_idSessionSemelle()
