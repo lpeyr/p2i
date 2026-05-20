@@ -1,6 +1,7 @@
 "use client";
 
-import { Button, Card, CardHeader, Chip, Separator, Tabs } from "@heroui/react";
+import { Button, Card, CardHeader, Chip, Separator } from "@heroui/react";
+import Image from "next/image";
 import { useState } from "react";
 import { Pause, Play, Square } from "@gravity-ui/icons";
 import dynamic from "next/dynamic";
@@ -13,10 +14,12 @@ interface ActivityData {
     steps: number;
     duration: number;
     startTime: Date;
-    leftFootPressure: number;
-    rightFootPressure: number;
+    leftFootContacts: FootContactValues;
+    rightFootContacts: FootContactValues;
     speed: number;
 }
+
+type FootContactValues = readonly [number, number, number];
 
 interface StatItemProps {
     label: string;
@@ -26,9 +29,110 @@ interface StatItemProps {
     icon?: React.ReactNode;
 }
 
-interface PressureVisualizerProps {
-    leftPressure: number;
-    rightPressure: number;
+interface FootPressureVisualizerProps {
+    leftContacts: FootContactValues;
+    rightContacts: FootContactValues;
+}
+
+interface FootPoint {
+    label: string;
+    top: string;
+}
+
+interface FootCardProps {
+    title: string;
+    src: string;
+    contacts: FootContactValues;
+    maxContacts: number;
+}
+
+const FOOT_POINTS: FootPoint[] = [
+    { label: "Haut", top: "20%" },
+    { label: "Milieu", top: "50%" },
+    { label: "Bas", top: "80%" },
+];
+
+const LEGEND_ITEMS = [
+    { label: "0%", percentage: 0 },
+    { label: "1% à 33%", percentage: 16 },
+    { label: "34% à 66%", percentage: 50 },
+    { label: "67% à 100%", percentage: 84 },
+] as const;
+
+function getContactPercentage(count: number, maxContacts: number) {
+    if (maxContacts <= 0) return 0;
+    return (count / maxContacts) * 100;
+}
+
+function getCircleClassName(percentage: number) {
+    if (percentage === 0) {
+        return "bg-white text-default-700 shadow-[0_8px_18px_rgba(148,163,184,0.42)]";
+    }
+
+    if (percentage < 34) {
+        return "bg-success text-success-foreground shadow-[0_8px_18px_rgba(34,197,94,0.42)]";
+    }
+
+    if (percentage < 67) {
+        return "bg-warning text-warning-foreground shadow-[0_8px_18px_rgba(245,158,11,0.42)]";
+    }
+
+    return "bg-danger text-danger-foreground shadow-[0_8px_18px_rgba(239,68,68,0.42)]";
+}
+
+function FootCard({ title, src, contacts, maxContacts }: Readonly<FootCardProps>) {
+    const totalContacts = contacts.reduce((sum, value) => sum + value, 0);
+
+    return (
+        <Card className="border-separator border">
+            <div className="space-y-4 p-6">
+                <div className="flex items-center justify-between">
+                    <div>
+                        <p className="font-semibold">{title}</p>
+                        <p className="text-sm">
+                            {totalContacts} appui{totalContacts > 1 ? "s" : ""}
+                        </p>
+                    </div>
+                </div>
+
+                <div className="relative mx-auto aspect-3/5 w-full max-w-70">
+                    <Image
+                        src={src}
+                        alt={title}
+                        height={150}
+                        width={250}
+                        className="object-contain"
+                        priority
+                    />
+
+                    {FOOT_POINTS.map((point, index) => {
+                        const count = contacts[index];
+                        const percentage = getContactPercentage(count, maxContacts);
+
+                        return (
+                            <div
+                                key={point.label}
+                                className={`absolute left-1/2 flex h-11 w-11 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full text-sm font-bold transition-colors duration-300 ${getCircleClassName(percentage)}`}
+                                style={{ top: point.top }}
+                                title={`${point.label}: ${count}`}
+                            >
+                                {count}
+                            </div>
+                        );
+                    })}
+                </div>
+
+                <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                    {FOOT_POINTS.map((point, index) => (
+                        <div key={point.label} className="space-y-1">
+                            <p className="text-foreground font-medium">{point.label}</p>
+                            <p>{contacts[index]}</p>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </Card>
+    );
 }
 
 export default function ActivityPage() {
@@ -37,8 +141,8 @@ export default function ActivityPage() {
         steps: 0,
         duration: 0,
         startTime: new Date(),
-        leftFootPressure: 0,
-        rightFootPressure: 0,
+        leftFootContacts: [0, 0, 0],
+        rightFootContacts: [0, 0, 0],
         speed: 0,
     });
 
@@ -70,7 +174,7 @@ export default function ActivityPage() {
                 <section className="flex items-center justify-between">
                     <div className="space-y-2">
                         <h1 className="text-4xl font-bold">Activité en Temps Réel</h1>
-                        <p className="text-muted-foreground text-lg">
+                        <p className="text-lg">
                             Suivez votre marche et analysez vos données en direct
                         </p>
                     </div>
@@ -103,8 +207,8 @@ export default function ActivityPage() {
                                     steps: 0,
                                     duration: 0,
                                     startTime: new Date(),
-                                    leftFootPressure: 0,
-                                    rightFootPressure: 0,
+                                    leftFootContacts: [0, 0, 0],
+                                    rightFootContacts: [0, 0, 0],
                                     speed: 0,
                                 });
                             }}
@@ -134,7 +238,7 @@ export default function ActivityPage() {
                             color="text-success"
                         />
                         <StatCard
-                            label="Vitesse"
+                            label="Vitesse Moyenne"
                             value={activityData.speed.toFixed(1)}
                             unit="km/h"
                             color="text-warning"
@@ -152,9 +256,7 @@ export default function ActivityPage() {
                                 <div className="flex items-center justify-between">
                                     <div>
                                         <p className="font-semibold">Itinéraire en direct</p>
-                                        <p className="text-muted-foreground text-sm">
-                                            Visualisation de votre trajet
-                                        </p>
+                                        <p className="text-sm">Visualisation de votre trajet</p>
                                     </div>
                                     <Chip
                                         variant="soft"
@@ -174,78 +276,12 @@ export default function ActivityPage() {
 
                     {/* Foot Pressure Visualizer */}
                     <div className="space-y-4">
-                        <h2 className="text-2xl font-semibold">Pression des Pieds</h2>
-                        <PressureVisualizer
-                            leftPressure={activityData.leftFootPressure}
-                            rightPressure={activityData.rightFootPressure}
+                        <h2 className="text-2xl font-semibold">Appuis flexiforce</h2>
+                        <FootPressureVisualizer
+                            leftContacts={activityData.leftFootContacts}
+                            rightContacts={activityData.rightFootContacts}
                         />
                     </div>
-                </section>
-
-                {/* 3D Foot Visualization */}
-                <section className="space-y-4">
-                    <h2 className="text-2xl font-semibold">Visualisation 3D en Temps Réel</h2>
-                    <Card className="border-separator overflow-hidden border">
-                        <div className="space-y-4 p-0">
-                            <Tabs>
-                                <Tabs.ListContainer>
-                                    <Tabs.List aria-label="Options">
-                                        {[
-                                            {
-                                                id: "both",
-                                                label: "Les Deux Pieds",
-                                                side: "both" as const,
-                                            },
-                                            {
-                                                id: "left",
-                                                label: "Pied Gauche",
-                                                side: "left" as const,
-                                            },
-                                            {
-                                                id: "right",
-                                                label: "Pied Droit",
-                                                side: "right" as const,
-                                            },
-                                        ].map((tab) => (
-                                            <Tabs.Tab key={tab.id} id={tab.id}>
-                                                {tab.label}
-                                                <Tabs.Indicator />
-                                            </Tabs.Tab>
-                                        ))}
-                                    </Tabs.List>
-                                </Tabs.ListContainer>
-                                <Tabs.Panel className="pt-4" id="both">
-                                    <Foot3DPlaceholder footSide="both" isActive={isActive} />
-                                </Tabs.Panel>
-                                <Tabs.Panel className="pt-4" id="left">
-                                    <Foot3DPlaceholder footSide="both" isActive={isActive} />
-                                </Tabs.Panel>
-                                <Tabs.Panel className="pt-4" id="right">
-                                    <Foot3DPlaceholder footSide="both" isActive={isActive} />
-                                </Tabs.Panel>
-                            </Tabs>
-                        </div>
-                    </Card>
-                </section>
-
-                {/* Data Stream Info */}
-                <section className="space-y-4">
-                    <h2 className="text-2xl font-semibold">Informations</h2>
-                    <Card className="border-separator border">
-                        <div className="gap-4 p-6">
-                            <p className="text-muted-foreground">
-                                <span className="font-semibold">État SSE :</span> Connecté et prêt
-                            </p>
-                            <p className="text-muted-foreground">
-                                <span className="font-semibold">Semelles détectées :</span> 2
-                                (Gauche ✓, Droite ✓)
-                            </p>
-                            <p className="text-muted-foreground">
-                                <span className="font-semibold">Résolution :</span> Données mises à
-                                jour chaque seconde
-                            </p>
-                        </div>
-                    </Card>
                 </section>
             </div>
         </main>
@@ -257,105 +293,61 @@ function StatCard({ label, value, unit, color = "text-primary" }: Readonly<StatI
     return (
         <Card className="border-separator border">
             <div className="gap-2 p-6">
-                <p className="text-muted-foreground text-sm font-medium">{label}</p>
+                <p className="text-sm font-medium">{label}</p>
                 <div className="flex items-baseline gap-1">
                     <p className={`text-3xl font-bold ${color}`}>{value}</p>
-                    {unit && <p className="text-muted-foreground text-sm">{unit}</p>}
+                    {unit && <p className="text-sm">{unit}</p>}
                 </div>
             </div>
         </Card>
     );
 }
 
-/* Composant pour visualiser la pression des pieds */
-function PressureVisualizer({ leftPressure, rightPressure }: Readonly<PressureVisualizerProps>) {
-    const getColorByPressure = (pressure: number) => {
-        if (pressure < 30) return "bg-success";
-        if (pressure < 70) return "bg-warning";
-        return "bg-danger";
-    };
-
-    const getTextColorByPressure = (pressure: number) => {
-        if (pressure < 30) return "text-success";
-        if (pressure < 70) return "text-warning";
-        return "text-danger";
-    };
+/* Composant pour visualiser les appuis flexiforce sur les pieds */
+function FootPressureVisualizer({
+    leftContacts,
+    rightContacts,
+}: Readonly<FootPressureVisualizerProps>) {
+    const allContacts = [...leftContacts, ...rightContacts];
+    const maxContacts = Math.max(...allContacts, 0);
 
     return (
         <div className="space-y-4">
-            {/* Left Foot */}
-            <Card className="border-separator border">
-                <div className="gap-3 p-6">
-                    <div className="mb-2 flex items-center justify-between">
-                        <p className="font-semibold">Pied Gauche</p>
-                        <p className={`text-lg font-bold ${getTextColorByPressure(leftPressure)}`}>
-                            {leftPressure.toFixed(1)}%
-                        </p>
-                    </div>
-                    <div className="bg-default-200 h-3 w-full overflow-hidden rounded-full">
-                        <div
-                            className={`h-full ${getColorByPressure(leftPressure)} transition-all duration-300`}
-                            style={{ width: `${leftPressure}%` }}
-                        ></div>
-                    </div>
-                </div>
-            </Card>
-
-            {/* Right Foot */}
-            <Card className="border-separator border">
-                <div className="gap-3 p-6">
-                    <div className="mb-2 flex items-center justify-between">
-                        <p className="font-semibold">Pied Droit</p>
-                        <p className={`text-lg font-bold ${getTextColorByPressure(rightPressure)}`}>
-                            {rightPressure.toFixed(1)}%
-                        </p>
-                    </div>
-                    <div className="bg-default-200 h-3 w-full overflow-hidden rounded-full">
-                        <div
-                            className={`h-full ${getColorByPressure(rightPressure)} transition-all duration-300`}
-                            style={{ width: `${rightPressure}%` }}
-                        ></div>
-                    </div>
-                </div>
-            </Card>
-        </div>
-    );
-}
-
-/* Composant placeholder pour la visualisation 3D */
-interface Foot3DPlaceholderProps {
-    footSide: "left" | "right" | "both";
-    isActive: boolean;
-}
-
-function Foot3DPlaceholder({ footSide, isActive }: Readonly<Foot3DPlaceholderProps>) {
-    const getFootLabel = () => {
-        switch (footSide) {
-            case "left":
-                return "Pied Gauche";
-            case "right":
-                return "Pied Droit";
-            default:
-                return "Les Deux Pieds";
-        }
-    };
-
-    return (
-        <div className="flex h-96 flex-col items-center justify-center rounded-lg p-6">
-            <div className="space-y-4 text-center">
-                <div className="bg-secondary-100 mx-auto h-20 w-20 animate-pulse rounded-full"></div>
-                <div className="space-y-2">
-                    <p className="font-semibold">{getFootLabel()}</p>
-                    <p className="text-muted-foreground text-sm">
-                        {isActive
-                            ? "Rendu 3D en direct..."
-                            : "Démarrez une session pour voir le rendu 3D"}
-                    </p>
-                </div>
-                <Chip variant="soft" color="warning" size="sm">
-                    Prêt pour WebGL/Three.js
-                </Chip>
+            <div className="grid gap-4 md:grid-cols-2">
+                <FootCard
+                    title="Pied gauche"
+                    src="/foot_l.png"
+                    contacts={leftContacts}
+                    maxContacts={maxContacts}
+                />
+                <FootCard
+                    title="Pied droit"
+                    src="/foot_r.png"
+                    contacts={rightContacts}
+                    maxContacts={maxContacts}
+                />
             </div>
+
+            <Card className="border-separator border">
+                <div className="space-y-3 p-6">
+                    <div className="space-y-1">
+                        <p className="font-semibold">Légende</p>
+                        <p className="text-sm">
+                            Référence : la zone qui a reçu le plus d&apos;appuis = 100%
+                        </p>
+                    </div>
+                    <div>
+                        {LEGEND_ITEMS.map((item) => (
+                            <div key={item.label} className="flex items-center gap-2">
+                                <span
+                                    className={`inline-flex h-4 w-4 rounded-full ${getCircleClassName(item.percentage)}`}
+                                />
+                                <span>{item.label}</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </Card>
         </div>
     );
 }
