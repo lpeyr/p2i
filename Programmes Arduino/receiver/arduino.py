@@ -34,17 +34,17 @@ def display_sensor_data(data):
     print("\n--- Sensor Data ---")
     print(f"Timestamp: {data.get('timestamp', 'N/A')}")
 
-    if 'flexi1' in data:
+    if "flexi1" in data:
         print(f"Flexi 1: {data['flexi1']}")
-    if 'flexi2' in data:
+    if "flexi2" in data:
         print(f"Flexi 2: {data['flexi2']}")
-    if 'flexi3' in data:
+    if "flexi3" in data:
         print(f"Flexi 3: {data['flexi3']}")
 
-    if 'gps' in data:
+    if "gps" in data:
         print(f"GPS Data: {data['gps']}")
 
-    if 'accel' in data:
+    if "accel" in data:
         print(f"Acceleration: {data['accel']}")
 
     print("-------------------\n")
@@ -52,12 +52,12 @@ def display_sensor_data(data):
 
 # Open COM6
 ser = serial.Serial(
-    port='COM6',
+    port="COM6",
     baudrate=9600,  # Match your device's baud rate
     bytesize=serial.EIGHTBITS,
     parity=serial.PARITY_NONE,
     stopbits=serial.STOPBITS_ONE,
-    timeout=1  # Read timeout in seconds
+    timeout=1,  # Read timeout in seconds
 )
 
 print(f"Connected to {ser.name}")
@@ -66,7 +66,7 @@ try:
     while True:
         if ser.in_waiting > 0:  # Bytes available to read
             line = ser.readline()  # Read until newline
-            decoded_line = line.decode('utf-8').strip()
+            decoded_line = line.decode("utf-8").strip()
 
             # Decode and display sensor data
             sensor_data = decode_sensor_data(decoded_line)

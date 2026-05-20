@@ -13,22 +13,26 @@ class TTNDataHandler:
 
     # Méthode appelée lorsque le client TTN reçoit un message
     def on_ttn_message(self, message):
-        #print(f"[TTNDataHandler] Données reçues par le Handler: " + str(message))
+        # print(f"[TTNDataHandler] Données reçues par le Handler: " + str(message))
 
-        device_id = message['device_id']
-        message_date = message['date']
-        message_json = message['json']
+        device_id = message["device_id"]
+        message_date = message["date"]
+        message_json = message["json"]
 
         aff_message_date = message_date.strftime("%d/%m/%Y %H:%M:%S (%Z%z)")
         print()
-        print(f"[TTNDataHandler] {aff_message_date}: Message de {device_id} => " + str(message_json))
+        print(
+            f"[TTNDataHandler] {aff_message_date}: Message de {device_id} => "
+            + str(message_json)
+        )
 
         self.my_method(device_id, message_date, message_json)
 
     # Méthode(s) à adapter aux besoins de votre projet (requêtes SQL, etc.)
     def my_method(self, device_id, message_date, message_json):
-        print(f"[TTNDataHandler] Votre Méthode du TTNDataHandler... ['{self.parameter1}', '{self.parameter2}']")
-
+        print(
+            f"[TTNDataHandler] Votre Méthode du TTNDataHandler... ['{self.parameter1}', '{self.parameter2}']"
+        )
 
 
 print()
@@ -44,11 +48,11 @@ ttn_api_key_secret = "NNSXS.XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX.YYYYYYYYYYYY
 
 
 # ** Paramètres du TTN Data Handler à adapter à votre projet **
-ttn_data_handler = TTNDataHandler('P2i-2 Test Value', 1234567890)
+ttn_data_handler = TTNDataHandler("P2i-2 Test Value", 1234567890)
 
 # ** Choix de la connexion MQTT ou MQTTs **
-#ttn_ca_cert = None  # pour connexion MQTT simple
-ttn_ca_cert = './mqtt2-ca-cert.pem'  # pour connexion MQTTs avec certificat
+# ttn_ca_cert = None  # pour connexion MQTT simple
+ttn_ca_cert = "./mqtt2-ca-cert.pem"  # pour connexion MQTTs avec certificat
 
 
 # ** Initialisation de la classe TTN Client **
@@ -57,7 +61,7 @@ ttn_client = TTNClient(
     ttn_application_id,
     ttn_api_key_secret,
     ttn_data_handler,
-    ca_cert=ttn_ca_cert
+    ca_cert=ttn_ca_cert,
 )
 
 
@@ -75,7 +79,9 @@ ttn_client = TTNClient(
 # ** Récupération des messages stockés (Message storage) **
 print()
 print("** Récupération des messages stockés (depuis 5 minutes)")
-ttn_client.storage_retrieve_messages(hours=0, minutes=5)  # Penser à activer le "Message storage" sur TTN
+ttn_client.storage_retrieve_messages(
+    hours=0, minutes=5
+)  # Penser à activer le "Message storage" sur TTN
 
 
 # ** Connexion MQTT(s) + Abonnement aux devices **
@@ -85,7 +91,7 @@ ttn_client.mqtt_connect()  # Connect to TTN
 
 # ttn.mqtt_register_device("node16")
 # ttn.mqtt_register_device("node8")
-ttn_client.mqtt_register_devices(['node9', 'node7'])
+ttn_client.mqtt_register_devices(["node9", "node7"])
 
 
 # ** Script en attente // Réception des Messages MQTT par le Handler **
