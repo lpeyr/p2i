@@ -1,4 +1,6 @@
+import "server-only";
 import { query, Session } from "@/lib/db";
+import totalDistanceMeters from "@/lib/distance";
 
 interface GpsPoint {
     lat: number;
@@ -31,8 +33,6 @@ export interface SessionOverview {
     step: number;
     distanceMeters: number;
 }
-
-import totalDistanceMeters from "@/lib/distance";
 
 export async function getAllSessions(): Promise<SessionOverview[]> {
     const rows = await query<
