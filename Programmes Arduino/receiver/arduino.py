@@ -1,8 +1,10 @@
+from os import environ
+
 import json
-import serial  # pip install pyserial
-from datetime import datetime
 import mysql.connector as mysql
+import serial  # pip install pyserial
 from serial.tools import list_ports
+
 
 class AppliProd:
 
@@ -21,7 +23,7 @@ class AppliProd:
                 host="fimi-bd-srv1.insa-lyon.fr",
                 port=3306,
                 user="G221_C",  # remplacer par vos propres username
-                password="G221_C",  # remplacer par vos propres password
+                password=environ.get("DB_PASSWORD"),  # remplacer par vos propres password
                 database="G221_C_BD1",  # remplacer par la BD commune de votre groupe
             )
             print("=> Connexion établie...")
@@ -69,16 +71,17 @@ class AppliProd:
 
             if len(rows) == 0:
                 print("Pas de session active")
-                return None,None
+                return None, None
             elif len(rows) > 1:
                 print("Plusieurs sessions actives détectées")
             idSession, semelle1 = rows[0]
             return idSession, semelle1
-        
+
         except Exception as e:
             print("MySQL [SELECT ERROR]")
             print(e)
-            return None,None
+            return None, None
+
 
 def buildFlexiMesures(data, idSession, idSemelle):
     rows = []
@@ -193,7 +196,7 @@ ser = serial.Serial(
 print(f"Connected to {ser.name}")
 instance_prod = AppliProd()
 instance_prod.connexion_bd()
-idSession ,idSemelle= instance_prod.find_idSessionSemelle()
+idSession, idSemelle = instance_prod.find_idSessionSemelle()
 if idSession:
     try:
         while True:
@@ -201,13 +204,13 @@ if idSession:
                 line = ser.readline()  # Read until newline
                 decoded_line = line.decode("utf-8").strip()
                 print("-------------------------------------------------------")
-                
+
                 if decoded_line.startswith("{"):
                     # Decode and display sensor data
                     sensor_data = decode_sensor_data(decoded_line)
                     if sensor_data:
                         display_sensor_data(sensor_data)
-                        instance_prod.ajouter_mesure(sensor_data,idSession ,idSemelle)
+                        instance_prod.ajouter_mesure(sensor_data, idSession, idSemelle)
                         print("valeur ajt")
                     else:
                         print(f"pas de données")
