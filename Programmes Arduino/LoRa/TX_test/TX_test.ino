@@ -3,7 +3,7 @@
 
 
 int num_gp    = 0;
-int frequency = 862e6 + num_gp * 1e6;
+int frequency = 862e6;
 int SF        = 8;
 int BW        = 125E3;
 int CR        = 5;
@@ -33,7 +33,7 @@ unsigned long t_dernier_envoi = 0;
 
 void envoyerTrame() {
   memset(&trame, 0, sizeof(trame));
-  trame.timestamp = millis() / 1000;
+  trame.timestamp = 1779264502; // A changer avec la vraie valeur depuis TinyGPS
   trame.gps[0]    = 4576;  // latitude  ≈ 45.76° N
   trame.gps[1]    = 470;   // longitude ≈  4.70° E
 

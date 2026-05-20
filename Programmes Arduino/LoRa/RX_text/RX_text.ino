@@ -35,43 +35,42 @@ bool getBit(uint8_t* tableau, int pos) {
   return (tableau[pos / 8] >> (pos % 8)) & 1;
 }
 
-void bitsToStr(uint8_t* tableau, char* out) {
-  for (int i = 0; i < NB_BITS; i++)
-    out[i] = getBit(tableau, i) ? '1' : '0';
-  out[NB_BITS] = '\0';
+void afficherListeBits(uint8_t* tableau) {
+  Serial.print("[");
+  for (int i = 0; i < NB_BITS; i++) {
+    Serial.print(getBit(tableau, i) ? 1 : 0);
+    if (i < NB_BITS - 1) Serial.print(",");
+  }
+  Serial.print("]");
 }
 
 
-// ─── Affichage JSON-like de la trame ─────────────────────────────────────────
+// ─── Affichage JSON-like de la trame ──────────────────────────────────────────
 void afficherTrame(Trame_complet& trame) {
+  Serial.print("{timestamp: ");
+  Serial.print(trame.timestamp);
 
-  // Bits flex → chaînes
-  char f1[NB_BITS + 1], f2[NB_BITS + 1], f3[NB_BITS + 1];
-  bitsToStr(trame.bits_f1, f1);
-  bitsToStr(trame.bits_f2, f2);
-  bitsToStr(trame.bits_f3, f3);
+  Serial.print(", flexi1: ");
+  afficherListeBits(trame.bits_f1);
 
-  // IMU → chaîne  (7 chars × 20 valeurs + séparateurs)
-  char imu[160] = "";
-  char tmp[10];
+  Serial.print(", flexi2: ");
+  afficherListeBits(trame.bits_f2);
+
+  Serial.print(", flexi3: ");
+  afficherListeBits(trame.bits_f3);
+
+  Serial.print(", gps: [{lat: ");
+  Serial.print(trame.gps[0] / 100.0f, 2);
+  Serial.print(", lon: ");
+  Serial.print(trame.gps[1] / 100.0f, 2);
+  Serial.print("}]");
+
+  Serial.print(", accel: [");
   for (int i = 0; i < NB_IMU; i++) {
-    snprintf(tmp, sizeof(tmp), "%.2f", trame.imu_acc[i] / 100.0f);
-    strcat(imu, tmp);
-    if (i < NB_IMU - 1) strcat(imu, ", ");
+    Serial.print(trame.imu_acc[i] / 100.0f, 2);
+    if (i < NB_IMU - 1) Serial.print(", ");
   }
-
-  // Message principal — SAMD21 supporte %f dans snprintf
-  char msg[600];
-  snprintf(msg, sizeof(msg),
-    "{timestamp: %lu, flexi1: %s, flexi2: %s, flexi3: %s, gps: [{lat: %.2f, lon: %.2f}], accel: [%s]}",
-    trame.timestamp,
-    f1, f2, f3,
-    trame.gps[0] / 100.0f,
-    trame.gps[1] / 100.0f,
-    imu
-  );
-
-  Serial.println(msg);
+  Serial.println("]}");
 }
 
 
@@ -107,8 +106,9 @@ void loop() {
     Trame_complet trame;
     LoRa.readBytes((byte*)&trame, sizeof(trame));
 
-    Serial.print("RSSI: "); Serial.print(LoRa.packetRssi()); Serial.print(" dBm | SNR: ");
-    Serial.print(LoRa.packetSnr()); Serial.println(" dB");
+    Serial.print("RSSI: "); Serial.print(LoRa.packetRssi());
+    Serial.print(" dBm | SNR: "); Serial.print(LoRa.packetSnr());
+    Serial.println(" dB");
 
     afficherTrame(trame);
 
