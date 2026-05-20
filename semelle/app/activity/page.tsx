@@ -112,7 +112,7 @@ function FootCard({ title, src, contacts, maxContacts }: Readonly<FootCardProps>
                         return (
                             <div
                                 key={point.label}
-                                className={`absolute left-1/2 flex h-11 w-11 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full text-sm font-bold transition-colors duration-300 ${getCircleClassName(percentage)}`}
+                                className={`absolute left-1/2 flex h-11 w-11 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full text-sm font-bold text-black transition-colors duration-300 ${getCircleClassName(percentage)}`}
                                 style={{ top: point.top }}
                                 title={`${point.label}: ${count}`}
                             >
