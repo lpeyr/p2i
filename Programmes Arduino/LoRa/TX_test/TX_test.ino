@@ -1,6 +1,7 @@
 #include <SPI.h>
 #include <LoRa.h>
 
+
 int num_gp    = 0;
 int frequency = 862e6 + num_gp * 1e6;
 int SF        = 8;
@@ -8,31 +9,33 @@ int BW        = 125E3;
 int CR        = 5;
 int power     = 10;
 
+
 #define NB_IMU        20
 #define NB_FLEX_OCT   5
-#define NB_GPS        2
 #define DELTA_SEND_MS 20000
+
 
 typedef struct __attribute__((packed)) {
   uint32_t timestamp;              // 4 octets
   uint8_t  bits_f1[NB_FLEX_OCT];  // 5 octets
   uint8_t  bits_f2[NB_FLEX_OCT];  // 5 octets
   uint8_t  bits_f3[NB_FLEX_OCT];  // 5 octets
-  uint16_t gps_lat[NB_GPS];       // 4 octets
-  uint16_t gps_lng[NB_GPS];       // 4 octets
-  int16_t  imu_acc[NB_IMU];       // 40 octets (norme ×100)
+  uint16_t gps[2];                 // 4 octets — [0]=lat, [1]=lng
+  int16_t  imu_acc[NB_IMU];        // 40 octets
 } Trame_complet;
-// Total : 4 + 15 + 8 + 40 = 67 octets ✅
+// Total : 4 + 15 + 4 + 40 = 63 octets
+
 
 Trame_complet trame;
 int compteur = 0;
 unsigned long t_dernier_envoi = 0;
 
+
 void envoyerTrame() {
   memset(&trame, 0, sizeof(trame));
-  trame.timestamp  = millis() / 1000;
-  trame.gps_lat[0] = 4576;
-  trame.gps_lng[0] = 470;
+  trame.timestamp = millis() / 1000;
+  trame.gps[0]    = 4576;  // latitude  ≈ 45.76° N
+  trame.gps[1]    = 470;   // longitude ≈  4.70° E
 
   // Simulation accélération (norme ×100, résolution 0.01 m/s²)
   for (int i = 0; i < NB_IMU; i++) {
@@ -52,6 +55,7 @@ void envoyerTrame() {
 
   compteur++;
 }
+
 
 void setup() {
   Serial.begin(9600);
@@ -74,6 +78,7 @@ void setup() {
   envoyerTrame();
   t_dernier_envoi = millis();
 }
+
 
 void loop() {
   if (millis() - t_dernier_envoi >= DELTA_SEND_MS) {
