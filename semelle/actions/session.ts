@@ -123,4 +123,3 @@ async function getSessionStatsImpl(sessionId: number): Promise<SessionStatsBySem
 }
 
 export default getSessionStatsImpl;
-

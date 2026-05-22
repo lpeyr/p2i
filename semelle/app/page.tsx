@@ -1,5 +1,5 @@
 import { getUser } from "@/actions/user";
-import Home from "@/components/home";
+import Home, { type HomeProps } from "@/components/home";
 import { getOverview, getSemellesStats } from "@/actions/stats";
 
 export default async function HomePage() {
@@ -16,7 +16,10 @@ export default async function HomePage() {
     const semelles = semelleStats.map((stat) => ({
         id: stat.semelle.idSemelle,
         side: stat.semelle.side,
-        name: stat.semelle.side === "left" ? `Semelle Gauche (#${stat.semelle.idSemelle})` : `Semelle Droite (#${stat.semelle.idSemelle})`,
+        name:
+            stat.semelle.side === "left"
+                ? `Semelle Gauche (#${stat.semelle.idSemelle})`
+                : `Semelle Droite (#${stat.semelle.idSemelle})`,
         active: stat.lastTimeActive !== null,
         steps: stat.step,
         distanceKm: Number((stat.distance / 1000).toFixed(2)),
@@ -24,7 +27,7 @@ export default async function HomePage() {
         lastTimeActive: stat.lastTimeActive?.toISOString() ?? null,
     }));
 
-    const homeProps = { userName: user.prenom, overview, semelles } as any;
+    const homeProps: HomeProps = { userName: user.prenom, overview, semelles };
 
     return <Home {...homeProps} />;
 }

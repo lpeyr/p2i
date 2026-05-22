@@ -62,7 +62,11 @@ function estimateDistanceFromSteps(steps: number): number {
     return Number((steps * ESTIMATED_DISTANCE_PER_STEP_METERS).toFixed(2));
 }
 
-async function getSemelleStepTotal(semelleId: number, startSql: string, endSql: string): Promise<number> {
+async function getSemelleStepTotal(
+    semelleId: number,
+    startSql: string,
+    endSql: string,
+): Promise<number> {
     const rows = await query<{ total_steps: number }[]>(
         `SELECT COALESCE(SUM(COALESCE(step, 0)), 0) AS total_steps
          FROM Session
@@ -75,7 +79,11 @@ async function getSemelleStepTotal(semelleId: number, startSql: string, endSql: 
     return Number(rows?.[0]?.total_steps ?? 0);
 }
 
-async function getSemelleLastActivity(semelleId: number, startSql: string, endSql: string): Promise<Date | null> {
+async function getSemelleLastActivity(
+    semelleId: number,
+    startSql: string,
+    endSql: string,
+): Promise<Date | null> {
     const rows = await query<{ last_activity: Date | string | null }[]>(
         `SELECT MAX(last_activity) AS last_activity
          FROM (
@@ -100,13 +108,33 @@ async function getSemelleLastActivity(semelleId: number, startSql: string, endSq
              WHERE idSemelle = ?
                AND time BETWEEN ? AND ?
          ) AS activity_times`,
-        [endSql, semelleId, semelleId, endSql, endSql, startSql, semelleId, startSql, endSql, semelleId, startSql, endSql, semelleId, startSql, endSql],
+        [
+            endSql,
+            semelleId,
+            semelleId,
+            endSql,
+            endSql,
+            startSql,
+            semelleId,
+            startSql,
+            endSql,
+            semelleId,
+            startSql,
+            endSql,
+            semelleId,
+            startSql,
+            endSql,
+        ],
     );
 
     return normalizeDateTime(rows?.[0]?.last_activity ?? null);
 }
 
-async function getSemelleStat(semelle: Semelle, startSql: string, endSql: string): Promise<SemelleStat> {
+async function getSemelleStat(
+    semelle: Semelle,
+    startSql: string,
+    endSql: string,
+): Promise<SemelleStat> {
     const step = await getSemelleStepTotal(semelle.idSemelle, startSql, endSql);
     const distance = estimateDistanceFromSteps(step);
     const calories = estimateCaloriesFromSteps(step);
@@ -171,10 +199,10 @@ export async function getOverview(since: string | Date): Promise<Overview> {
 
 interface SemelleStat {
     semelle: Semelle;
-    step: number
-    calories: number
-    distance: number
-    lastTimeActive: Date | null
+    step: number;
+    calories: number;
+    distance: number;
+    lastTimeActive: Date | null;
 }
 
 async function getSemellesStatsImpl(dateStart: Date, dateEnd: Date): Promise<SemelleStat[]> {
@@ -195,4 +223,3 @@ async function getSemellesStatsImpl(dateStart: Date, dateEnd: Date): Promise<Sem
 }
 
 export { getSemellesStatsImpl as getSemellesStats };
-

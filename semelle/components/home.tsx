@@ -153,7 +153,6 @@ export default function Home({ userName, overview, semelles }: Readonly<HomeProp
                                             </p>
                                         </div>
                                     </div>
-
                                 </div>
                             </Card>
                         ))}
