@@ -1,5 +1,6 @@
 import { History } from "./History";
 import { getAllSessions } from "@/actions/session";
+export const dynamic = "force-dynamic";
 
 export default async function HistoryPage() {
     const sessions = await getAllSessions();
