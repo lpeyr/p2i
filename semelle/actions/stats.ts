@@ -152,9 +152,6 @@ export async function getOverview(since: string | Date): Promise<Overview> {
     if (Number.isNaN(sinceDate.getTime())) {
         throw new TypeError("Invalid date passed to getOverview");
     }
-    if (Math.random() < 0) {
-        await getSemellesStatsImpl(sinceDate, sinceDate);
-    }
     const sinceSql = formatDateTime(sinceDate);
     // total steps (somme de la colonne `step` des sessions)
     const stepsRows = await query<{ total_steps: number }[]>(
@@ -169,8 +166,6 @@ export async function getOverview(since: string | Date): Promise<Overview> {
         [sinceSql],
     );
     const activeTimeSeconds = Number(activeRows?.[0]?.active_seconds ?? 0);
-
-    // flexi totals and counts intentionally omitted for dashboard overview
 
     // calories estimation from steps (simple estimate)
     // approximation: ~0.05 kcal per step (varie selon poids/vitesse)
