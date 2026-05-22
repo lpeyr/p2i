@@ -1,21 +1,21 @@
 #include <SPI.h>
 #include <LoRa.h>
-
-
-int FREQUENCY = 862e6;
-int SF        = 8;
-int BW        = 125E3;
-int CR        = 5;
-int power     = 10;
+#include 
 
 
 #define NB_IMU        20
-#define NB_FLEX_OCT   5
+#define NB_FLEX_OCT   5 
 #define DELTA_SEND_MS 20000
 #define FREQUENCY     862e6
+#define SF            8
+#define BW            125e3
+#define CR            5
+#define POWER         10
+#define 
 
 
 typedef struct __attribute__((packed)) {
+  uint8_t  identifiant             // 1 octet
   uint32_t timestamp;              // 4 octets
   uint8_t  bits_f1[NB_FLEX_OCT];  // 5 octets
   uint8_t  bits_f2[NB_FLEX_OCT];  // 5 octets
@@ -23,12 +23,25 @@ typedef struct __attribute__((packed)) {
   uint16_t gps[2];                 // 4 octets — [0]=lat, [1]=lng
   int16_t  imu_acc[NB_IMU];        // 40 octets
 } Trame_complet;
-// Total : 4 + 15 + 4 + 40 = 63 octets
+// Total: 63 octets
 
 
 Trame_complet trame;
 int compteur = 0;
 unsigned long t_dernier_envoi = 0;
+
+
+void gps_val(){
+  // voir fichier
+}
+
+void flexi_val(){
+    // Récupération via A0 A1 et A2
+}
+
+void remplir_trame(){
+    
+}
 
 
 void envoyerTrame() {
@@ -68,7 +81,7 @@ void setup() {
     while (true);
   }
 
-  LoRa.setTxPower(power);
+  LoRa.setTxPower(POWER);
   LoRa.setSpreadingFactor(SF);
   LoRa.setSignalBandwidth(BW);
   LoRa.setCodingRate4(CR);

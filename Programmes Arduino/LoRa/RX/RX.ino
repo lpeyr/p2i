@@ -1,24 +1,15 @@
-// RX.ino — Récepteur LoRa pour Trame_complet
-// Carte : Arduino MKR (SAMD21)
-// Basé sur lpeyr/p2i : Programmes Arduino/LoRa/RX_text/RX_text.ino
-
 #include <SPI.h>
 #include <LoRa.h>
 
 
-// ─── Paramètres radio (doivent correspondre au TX) ────────────────────────────
-int FREQUENCY = 862e6;
-int SF        = 8;
-int BW        = 125E3;
-int CR        = 5;
 
-
-// ─── Définition de la trame (identique au TX) ─────────────────────────────────
 #define NB_IMU        20
 #define NB_FLEX_OCT   5
 #define NB_BITS       (NB_FLEX_OCT * 8)  // 40 bits par capteur flex
 #define FREQUENCY     862e6
-#define 
+#define SF            8
+#define BW            125e3
+#define CR            5
 
 typedef struct __attribute__((packed)) {
   uint32_t timestamp;              // 4 octets
@@ -46,7 +37,6 @@ void afficherListeBits(uint8_t* tableau) {
 }
 
 
-// ─── Affichage JSON-like de la trame ──────────────────────────────────────────
 void afficherTrame(Trame_complet& trame) {
   Serial.print("{timestamp: ");
   Serial.print(trame.timestamp);
@@ -75,7 +65,6 @@ void afficherTrame(Trame_complet& trame) {
 }
 
 
-// ─── Setup ────────────────────────────────────────────────────────────────────
 void setup() {
   Serial.begin(9600);
   while (!Serial);
@@ -98,7 +87,6 @@ void setup() {
 }
 
 
-// ─── Loop ─────────────────────────────────────────────────────────────────────
 void loop() {
   int taille_paquet_recu = LoRa.parsePacket();
 
