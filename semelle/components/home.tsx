@@ -4,14 +4,26 @@ import { Alert, Button, Card, CardHeader, Separator } from "@heroui/react";
 import { Moon, Sun } from "@gravity-ui/icons";
 import { useTheme } from "next-themes";
 import Link from "next/link";
-import { Overview } from "@/actions/stats";
+import type { Overview } from "@/actions/stats";
 
-interface HomeProps {
+export interface HomeProps {
     userName: string;
     overview: Overview;
+    semelles: HomeSemelle[];
 }
 
-export default function Home({ userName, overview }: Readonly<HomeProps>) {
+interface HomeSemelle {
+    id: number;
+    side: "left" | "right";
+    name: string;
+    active: boolean;
+    steps: number;
+    distanceKm: number;
+    caloriesKcal: number;
+    lastTimeActive: string | null;
+}
+
+export default function Home({ userName, overview, semelles }: Readonly<HomeProps>) {
     const { theme, setTheme } = useTheme();
 
     const formatActiveTime = (seconds: number) => {
@@ -28,24 +40,16 @@ export default function Home({ userName, overview }: Readonly<HomeProps>) {
         return `${(meters / 1000).toFixed(2)} km`;
     };
 
-    const semelles = [
-        {
-            id: "left",
-            name: "Semelle Gauche",
-            active: true,
-            steps: 4215,
-            distance: 2.6,
-            calories: 160,
-        },
-        {
-            id: "right",
-            name: "Semelle Droite",
-            active: true,
-            steps: 4217,
-            distance: 2.6,
-            calories: 165,
-        },
-    ];
+    const leftSemelle = semelles.find((semelle) => semelle.side === "left");
+    const rightSemelle = semelles.find((semelle) => semelle.side === "right");
+    const leftSteps = leftSemelle?.steps ?? 0;
+    const rightSteps = rightSemelle?.steps ?? 0;
+    const maxSteps = Math.max(leftSteps, rightSteps, 0);
+    const stepGap = Math.abs(leftSteps - rightSteps);
+    const asymmetryPercent = maxSteps > 0 ? (stepGap / maxSteps) * 100 : 0;
+    const isBalanced = asymmetryPercent < 10;
+    const hasRecentActivity = semelles.some((semelle) => semelle.active) || overview.totalSteps > 0;
+
     const stats = [
         {
             id: "steps",
@@ -114,8 +118,8 @@ export default function Home({ userName, overview }: Readonly<HomeProps>) {
                                                 className={`text-xs font-medium ${semelle.active ? "text-success" : "text-warning"}`}
                                             >
                                                 {semelle.active
-                                                    ? "Connectée et active"
-                                                    : "Déconnectée"}
+                                                    ? "Activité récente"
+                                                    : "Aucune activité récente"}
                                             </p>
                                         </div>
                                     </div>
@@ -129,7 +133,7 @@ export default function Home({ userName, overview }: Readonly<HomeProps>) {
                                                 Pas
                                             </p>
                                             <p className="text-lg font-bold">
-                                                {semelle.steps.toLocaleString()}
+                                                {semelle.steps.toLocaleString("fr-FR")}
                                             </p>
                                         </div>
                                         <div className="p-2">
@@ -137,24 +141,19 @@ export default function Home({ userName, overview }: Readonly<HomeProps>) {
                                                 Distance
                                             </p>
                                             <p className="text-lg font-bold">
-                                                {semelle.distance} km
+                                                {semelle.distanceKm.toFixed(2)} km
                                             </p>
                                         </div>
                                         <div className="p-2">
                                             <p className="text-muted-foreground mb-1 text-xs font-medium">
                                                 Calories
                                             </p>
-                                            <p className="text-lg font-bold">{semelle.calories}</p>
+                                            <p className="text-lg font-bold">
+                                                {semelle.caloriesKcal.toFixed(2)}
+                                            </p>
                                         </div>
                                     </div>
 
-                                    <Button
-                                        variant="secondary"
-                                        className="self-end"
-                                        isDisabled={!semelle.active}
-                                    >
-                                        Voir les détails
-                                    </Button>
                                 </div>
                             </Card>
                         ))}
@@ -182,28 +181,46 @@ export default function Home({ userName, overview }: Readonly<HomeProps>) {
                 <section className="space-y-4">
                     <h2 className="text-2xl font-semibold">Détection de Problèmes</h2>
                     <div className="space-y-3">
-                        <Alert status="success">
+                        <Alert status={hasRecentActivity ? "success" : "warning"}>
                             <Alert.Indicator />
                             <Alert.Content>
-                                <Alert.Title>Votre marche est normale et régulière</Alert.Title>
-                            </Alert.Content>
-                        </Alert>
-                        <Alert status="warning">
-                            <Alert.Indicator />
-                            <Alert.Content>
-                                <Alert.Title>Pression inégale détectée</Alert.Title>
+                                <Alert.Title>
+                                    {hasRecentActivity
+                                        ? "Activité détectée aujourd'hui"
+                                        : "Aucune activité détectée aujourd'hui"}
+                                </Alert.Title>
                                 <Alert.Description>
-                                    Vous avez tendance à marcher sur la pointe des pieds.
+                                    {overview.totalSteps.toLocaleString("fr-FR")} pas,{" "}
+                                    {formatDistance(overview.distanceMeters)} parcourus et{" "}
+                                    {formatActiveTime(overview.activeTimeSeconds)} de temps actif.
                                 </Alert.Description>
                             </Alert.Content>
                         </Alert>
-                        <Alert status="warning">
+                        <Alert status={isBalanced ? "success" : "warning"}>
                             <Alert.Indicator />
                             <Alert.Content>
-                                <Alert.Title>Asymétrie détéctée</Alert.Title>
+                                <Alert.Title>
+                                    {isBalanced ? "Répartition équilibrée" : "Asymétrie détectée"}
+                                </Alert.Title>
                                 <Alert.Description>
-                                    Légère asymétrie entre la semelle gauche et droite. Continuez à
-                                    monitorer.
+                                    {leftSemelle && rightSemelle
+                                        ? `Gauche : ${leftSteps.toLocaleString("fr-FR")} pas · Droite : ${rightSteps.toLocaleString("fr-FR")} pas · Écart : ${stepGap.toLocaleString("fr-FR")} pas.`
+                                        : "Données insuffisantes pour comparer les deux semelles."}
+                                </Alert.Description>
+                            </Alert.Content>
+                        </Alert>
+                        <Alert status={overview.activeTimeSeconds >= 1800 ? "success" : "warning"}>
+                            <Alert.Indicator />
+                            <Alert.Content>
+                                <Alert.Title>
+                                    {overview.activeTimeSeconds >= 1800
+                                        ? "Temps actif satisfaisant"
+                                        : "Temps actif à renforcer"}
+                                </Alert.Title>
+                                <Alert.Description>
+                                    {overview.activeTimeSeconds >= 1800
+                                        ? "Vous avez déjà accumulé une bonne durée de marche aujourd'hui."
+                                        : "L'activité du jour reste limitée, pensez à marcher davantage si possible."}
                                 </Alert.Description>
                             </Alert.Content>
                         </Alert>

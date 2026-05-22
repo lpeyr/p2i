@@ -27,6 +27,7 @@ export async function getSession(id: number): Promise<Session> {
 export interface SessionOverview {
     idSession: number;
     dateDebut: string; // ISO
+    dateFin: string | null; // ISO
     durationSeconds: number;
     step: number;
     distanceMeters: number;
@@ -53,7 +54,7 @@ export async function getAllSessions(): Promise<SessionOverview[]> {
 
     for (const r of rows) {
         const gpsRows = await query<Array<{ lattitude: number | null; longitude: number | null }>>(
-            `SELECT lattitude, longitude FROM MesureGPS WHERE idSession = ? ORDER BY time ASC, idMesure ASC`,
+            `SELECT lattitude, longitude FROM MesureGPS WHERE idSession = ? ORDER BY time, idMesure`,
             [r.idSession],
         );
 
@@ -66,6 +67,7 @@ export async function getAllSessions(): Promise<SessionOverview[]> {
         result.push({
             idSession: r.idSession,
             dateDebut: new Date(r.dateDebut).toISOString(),
+            dateFin: r.dateFin ? new Date(r.dateFin).toISOString() : null,
             durationSeconds: Number(r.duration_seconds ?? 0),
             step: Number(r.step ?? 0),
             distanceMeters,
@@ -75,7 +77,7 @@ export async function getAllSessions(): Promise<SessionOverview[]> {
     return result;
 }
 
-export async function getSessionStats(sessionId: number): Promise<SessionStatsBySemelle> {
+async function getSessionStatsImpl(sessionId: number): Promise<SessionStatsBySemelle> {
     const session = await getSession(sessionId);
     if (!session) {
         throw new TypeError(`Session ${sessionId} not found`);
@@ -83,17 +85,17 @@ export async function getSessionStats(sessionId: number): Promise<SessionStatsBy
 
     const getSemelleStats = async (semelleId: number): Promise<SemelleStats> => {
         const flexiRows = await query<FlexiRow[]>(
-            "SELECT flexi1, flexi2, flexi3 FROM MesureFlexi WHERE idSession = ? AND idSemelle = ? ORDER BY time ASC, idMesureFlexi ASC",
+            "SELECT flexi1, flexi2, flexi3 FROM MesureFlexi WHERE idSession = ? AND idSemelle = ? ORDER BY time, idMesureFlexi",
             [sessionId, semelleId],
         );
 
         const imuRows = await query<Array<{ accel: number }>>(
-            "SELECT accel FROM MesureIMU WHERE idSession = ? AND idSemelle = ? ORDER BY time ASC, id ASC",
+            "SELECT accel FROM MesureIMU WHERE idSession = ? AND idSemelle = ? ORDER BY time, id",
             [sessionId, semelleId],
         );
 
         const gpsRows = await query<Array<{ lattitude: number | null; longitude: number | null }>>(
-            "SELECT lattitude, longitude FROM MesureGPS WHERE idSession = ? AND idSemelle = ? ORDER BY time ASC, idMesure ASC",
+            "SELECT lattitude, longitude FROM MesureGPS WHERE idSession = ? AND idSemelle = ? ORDER BY time, idMesure",
             [sessionId, semelleId],
         );
 
@@ -119,3 +121,6 @@ export async function getSessionStats(sessionId: number): Promise<SessionStatsBy
         semelle2: await getSemelleStats(session.semelle2),
     };
 }
+
+export default getSessionStatsImpl;
+
