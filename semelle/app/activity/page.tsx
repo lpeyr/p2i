@@ -27,7 +27,6 @@ interface ActivityData {
     speed: number;
 }
 
-
 export default function ActivityPage() {
     const [isActive, setIsActive] = useState(false);
     const [activityData, setActivityData] = useState<ActivityData>({
@@ -38,8 +37,6 @@ export default function ActivityPage() {
         rightFootContacts: [0, 0, 0],
         speed: 0,
     });
-
-
 
     const route: [number, number][] = [[45.782562, 4.872407]];
 

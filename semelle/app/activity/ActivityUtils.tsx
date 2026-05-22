@@ -146,4 +146,3 @@ export function formatStartTime(dateIso: string | Date) {
         second: "2-digit",
     });
 }
-
