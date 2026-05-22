@@ -1,6 +1,10 @@
+#include <Arduino.h>
 #include <SPI.h>
 #include <LoRa.h>
-#include 
+#include <FastIMU.h>
+#include <SensorFusion.h>
+#include <Wire.h>
+#include <math.h>
 
 
 #define NB_IMU        20
@@ -11,8 +15,6 @@
 #define BW            125e3
 #define CR            5
 #define POWER         10
-#define 
-
 
 typedef struct __attribute__((packed)) {
   uint8_t  identifiant             // 1 octet
@@ -25,10 +27,20 @@ typedef struct __attribute__((packed)) {
 } Trame_complet;
 // Total: 63 octets
 
+// --- Objets ---
 
 Trame_complet trame;
+MPU9250 IMU;
+AccelData accelData;
+GyroData gyroData;
+MagData magData;
+calData calib = {0};
+SF fusion;
+
+// --- Vars ---
 int compteur = 0;
 unsigned long t_dernier_envoi = 0;
+int nbr_imu_actuel = 0;
 
 
 void gps_val(){
@@ -38,6 +50,47 @@ void gps_val(){
 void flexi_val(){
     // Récupération via A0 A1 et A2
 }
+
+float[3] imuVal(){
+  IMU.update();
+  IMU.getAccel(&accelData);
+  IMU.getGyro(&gyroData);
+  IMU.getMag(&magData);
+
+  deltat = fusion.deltaUpdate();
+  // Algo pour tenir compte des angles dans le calcul de vitesse
+  fusion.MadgwickUpdate(
+    gyroData.gyroX * PI / 180.0f,
+    gyroData.gyroY * PI / 180.0f,
+    gyroData.gyroZ * PI / 180.0f,
+    accelData.accelX, accelData.accelY, accelData.accelZ,
+    magData.magX, magData.magY, magData.magZ,
+    deltat
+  );
+
+  // Les angles
+  float roll =  fusion.getRoll() * PI / 180.0f;
+  float pitch = fusion.getPitch() * PI / 180.0f;
+  float yaw =  fusion.getyaw() * PI / 180.0f;
+
+  float gravX =  sin(pitch) * 9.81f;
+  float gravY = -cos(pitch) * sin(roll) * 9.81f;
+  float gravZ = -cos(pitch) * cos(roll) * 9.81f;
+
+  // Soustraction gravité
+  float linX = accelData.accelX - gravX;
+  float linY = accelData.accelY - gravY;
+  float linZ = accelData.accelZ - gravZ;
+
+  float norme = sqrt(linX*linX + linY*linY + linZ*linZ);
+
+  trame.imu_acc[nb_imu_actuel] = (uint16_t)(norme * 100);
+  nb_imu_actuel++;
+
+  return [roll,pitch,yaw]
+  
+}
+
 
 void remplir_trame(){
     
