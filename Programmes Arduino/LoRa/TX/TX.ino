@@ -20,6 +20,7 @@
 #define flexi2        A1
 #define flexi3        A2
 #define SEUIL         850
+#define NB_MAX_ANGLE  1250
 
 
 typedef struct __attribute__((packed)) {
@@ -48,9 +49,12 @@ TinyGPSPlus gps;
 // --- Vars ---
 int compteur = 0;
 unsigned long t_dernier_envoi = 0;
-int nbr_imu_actuel = 0;
-float tabAngleIMU[3]
 int nb_mesure_actuel
+int nbr_imu_acc_actuel = 0;
+int nbr_imu_agl_actuel = 0;
+float tabRoll[NB_MAX_ANGLE];
+float tabPitch[NB_MAX_ANGLE];
+float tabYaw[NB_MAX_ANGLE];
 
 
 void setBit(uint8_t* tableau, int pos, bool valeur) {
@@ -166,9 +170,10 @@ void imuValAngle(){
   float pitch = fusion.getPitch() * PI / 180.0f;
   float yaw =  fusion.getYaw() * PI / 180.0f;
 
-  tabAngleIMU[0] = roll;
-  tabAngleIMU[1] = pitch;
-  tabAngleIMU[2] = yaw;
+  tabAngleIMU[nbr_imu_agl_actuel] = roll;
+  tabAngleIMU[nbr_imu_agl_actuel] = pitch;
+  tabAngleIMU[nbr_imu_agl_actuel] = yaw;
+  nbr_imu_agl_actuel++;
   
 }
 
