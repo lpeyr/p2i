@@ -16,6 +16,11 @@
 #define BW            125e3
 #define CR            5
 #define POWER         10
+#define flexi1        A0
+#define flexi2        A1
+#define flexi3        A2
+#define SEUIL         850
+
 
 typedef struct __attribute__((packed)) {
   uint8_t  identifiant;             // 1 octet
@@ -37,13 +42,34 @@ GyroData gyroData;
 MagData magData;
 calData calib = {0};
 SF fusion;
+TinyGPSPlus gps;
 
 
 // --- Vars ---
 int compteur = 0;
 unsigned long t_dernier_envoi = 0;
 int nbr_imu_actuel = 0;
-float[3] tabAngleIMU
+float tabAngleIMU[3]
+int nb_mesure_actuel
+
+
+void setBit(uint8_t* tableau, int pos, bool valeur) {
+  int octet = pos / 8;
+  int bit   = pos % 8;
+  if (valeur) tableau[octet] |=  (1 << bit);
+  else        tableau[octet] &= ~(1 << bit);
+}
+
+uint32_t gpsToTimestamp(TinyGPSDate &d, TinyGPSTime &t) {
+  uint16_t y   = d.year();
+  uint8_t  m   = d.month();
+  uint8_t  day = d.day();
+  uint32_t days = (y - 1970) * 365UL + (y - 1969) / 4;
+  uint8_t mdays[] = {31,28,31,30,31,30,31,31,30,31,30,31};
+  for (int i = 0; i < m - 1; i++) days += mdays[i];
+  days += day - 1;
+  return days * 86400UL + t.hour() * 3600UL + t.minute() * 60UL + t.second();
+}
 
 
 bool lireGPS(unsigned long timeout_ms) {
@@ -68,6 +94,7 @@ void gpsVal() {
 
     trame.gps[0] = (uint16_t)(gps.location.lat()  * 100);
     trame.gps[1] = (uint16_t)(gps.location.lng() * 100);
+    trame.timestamp = gpsToTimestamp(gps.date, gps.time)
   };
 }
 
@@ -86,7 +113,7 @@ void imuValAccel(){
   IMU.getGyro(&gyroData);
   IMU.getMag(&magData);
 
-  deltat = fusion.deltaUpdate();
+  float deltat = fusion.deltaUpdate();
   // Algo pour tenir compte des angles dans le calcul de vitesse
   fusion.MadgwickUpdate(
     gyroData.gyroX * PI / 180.0f,
@@ -123,7 +150,7 @@ void imuValAngle(){
   IMU.getGyro(&gyroData);
   IMU.getMag(&magData);
 
-  deltat = fusion.deltaUpdate();
+  float deltat = fusion.deltaUpdate();
   // Algo pour tenir compte des angles dans le calcul de vitesse
   fusion.MadgwickUpdate(
     gyroData.gyroX * PI / 180.0f,
