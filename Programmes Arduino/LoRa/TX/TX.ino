@@ -7,12 +7,12 @@
 #include <math.h>
 #include <TinyGPS++.h>
 
-
+#define IMU_ADDRESS 0x68
 #define NB_IMU        20
 #define NB_FLEX_OCT   5
 #define DELTA_SEND_MS 20000
 #define FREQUENCY     862e6
-#define SF            8
+#define LORA_SF            8
 #define BW            125e3
 #define CR            5
 #define POWER         10
@@ -20,7 +20,7 @@
 #define FLEXI2        A1
 #define FLEXI3        A2
 #define SEUIL         850
-#define NB_MAX_ANGLE  1250
+#define NB_MAX_ANGLE  1500
 
 
 typedef struct __attribute__((packed)) {
@@ -52,7 +52,7 @@ unsigned long t_dernier_envoi    = 0;
 int           nb_mesure_actuel   = 0;   // index flex  (0 .. NB_FLEX_OCT*8-1)
 int           nbr_imu_acc_actuel = 0;   // index accel (0 .. NB_IMU-1)
 int           nbr_imu_agl_actuel = 0;   // index angle (0 .. NB_MAX_ANGLE-1)
-float         tabRol[NB_MAX_ANGLE];
+float         tabRoll[NB_MAX_ANGLE];
 float         tabPitch[NB_MAX_ANGLE];
 float         tabYaw[NB_MAX_ANGLE];
 
@@ -117,7 +117,7 @@ void imuValAccel() {
   IMU.getGyro(&gyroData);
   IMU.getMag(&magData);
 
-  float deltat = fusion.deltaUpdate();
+  float deltat = fusion.deltatUpdate();
   fusion.MadgwickUpdate(
     gyroData.gyroX * PI / 180.0f,
     gyroData.gyroY * PI / 180.0f,
@@ -154,7 +154,7 @@ void imuValAngle() {
   IMU.getGyro(&gyroData);
   IMU.getMag(&magData);
 
-  float deltat = fusion.deltaUpdate();
+  float deltat = fusion.deltatUpdate();
   fusion.MadgwickUpdate(
     gyroData.gyroX * PI / 180.0f,
     gyroData.gyroY * PI / 180.0f,
@@ -266,7 +266,7 @@ void setup() {
     while (true);
   }
   LoRa.setTxPower(POWER);
-  LoRa.setSpreadingFactor(SF);
+  LoRa.setSpreadingFactor(LORA_SF);
   LoRa.setSignalBandwidth(BW);
   LoRa.setCodingRate4(CR);
   LoRa.setPreambleLength(8);
