@@ -5,7 +5,7 @@
 #include <SensorFusion.h>
 #include <Wire.h>
 #include <math.h>
-#include <TinyGPS.h>
+#include <TinyGPS++.h>
 
 
 #define NB_IMU        20
@@ -43,6 +43,7 @@ SF fusion;
 int compteur = 0;
 unsigned long t_dernier_envoi = 0;
 int nbr_imu_actuel = 0;
+float[3] tabAngleIMU
 
 
 bool lireGPS(unsigned long timeout_ms) {
@@ -79,7 +80,7 @@ void flexi_val(){
   setBit(trame.bits_f3, nb_mesure_actuel, val3);
 }
 
-float[3] imuVal(){
+void imuValAccel(){
   IMU.update();
   IMU.getAccel(&accelData);
   IMU.getGyro(&gyroData);
@@ -114,8 +115,33 @@ float[3] imuVal(){
 
   trame.imu_acc[nb_imu_actuel] = (uint16_t)(norme * 100);
   nb_imu_actuel++;
+}
 
-  return [roll,pitch,yaw]
+void imuValAngle(){
+  IMU.update();
+  IMU.getAccel(&accelData);
+  IMU.getGyro(&gyroData);
+  IMU.getMag(&magData);
+
+  deltat = fusion.deltaUpdate();
+  // Algo pour tenir compte des angles dans le calcul de vitesse
+  fusion.MadgwickUpdate(
+    gyroData.gyroX * PI / 180.0f,
+    gyroData.gyroY * PI / 180.0f,
+    gyroData.gyroZ * PI / 180.0f,
+    accelData.accelX, accelData.accelY, accelData.accelZ,
+    magData.magX, magData.magY, magData.magZ,
+    deltat
+  );
+
+  // Les angles
+  float roll =  fusion.getRoll() * PI / 180.0f;
+  float pitch = fusion.getPitch() * PI / 180.0f;
+  float yaw =  fusion.getYaw() * PI / 180.0f;
+
+  tabAngleIMU[0] = roll;
+  tabAngleIMU[1] = pitch;
+  tabAngleIMU[2] = yaw;
   
 }
 
