@@ -5,6 +5,7 @@
 #include <SensorFusion.h>
 #include <Wire.h>
 #include <math.h>
+#include <TinyGPS.h>
 
 
 #define NB_IMU        20
@@ -17,13 +18,13 @@
 #define POWER         10
 
 typedef struct __attribute__((packed)) {
-  uint8_t  identifiant             // 1 octet
-  uint32_t timestamp;              // 4 octets
-  uint8_t  bits_f1[NB_FLEX_OCT];  // 5 octets
-  uint8_t  bits_f2[NB_FLEX_OCT];  // 5 octets
-  uint8_t  bits_f3[NB_FLEX_OCT];  // 5 octets
-  uint16_t gps[2];                 // 4 octets — [0]=lat, [1]=lng
-  int16_t  imu_acc[NB_IMU];        // 40 octets
+  uint8_t  identifiant;             // 1 octet
+  uint32_t timestamp;               // 4 octets
+  uint8_t  bits_f1[NB_FLEX_OCT];    // 5 octets
+  uint8_t  bits_f2[NB_FLEX_OCT];    // 5 octets
+  uint8_t  bits_f3[NB_FLEX_OCT];    // 5 octets
+  uint16_t gps[2];                  // 4 octets — [0]=lat, [1]=lng
+  int16_t  imu_acc[NB_IMU];         // 40 octets
 } Trame_complet;
 // Total: 63 octets
 
@@ -37,18 +38,45 @@ MagData magData;
 calData calib = {0};
 SF fusion;
 
+
 // --- Vars ---
 int compteur = 0;
 unsigned long t_dernier_envoi = 0;
 int nbr_imu_actuel = 0;
 
 
-void gps_val(){
-  // voir fichier
+bool lireGPS(unsigned long timeout_ms) {
+  unsigned long debut = millis();
+  while (millis() - debut < timeout_ms) {
+    while (Serial1.available()) {
+      char c = Serial1.read();
+      if (gps.encode(c)) {
+        if (gps.location.isValid()) {
+          return true;
+        }
+      }
+    }
+  }
+  return false;
+}
+
+
+void gpsVal() {
+  bool gps_ok = lireGPS(5000);
+  if (gps_ok) {
+
+    trame.gps[0] = (uint16_t)(gps.location.lat()  * 100);
+    trame.gps[1] = (uint16_t)(gps.location.lng() * 100);
+  };
 }
 
 void flexi_val(){
-    // Récupération via A0 A1 et A2
+  bool val1 = analogRead(flexi1) < SEUIL;
+  bool val2 = analogRead(flexi2) < SEUIL;
+  bool val3 = analogRead(flexi3) < SEUIL;
+  setBit(trame.bits_f1, nb_mesure_actuel, val1);
+  setBit(trame.bits_f2, nb_mesure_actuel, val2);
+  setBit(trame.bits_f3, nb_mesure_actuel, val3);
 }
 
 float[3] imuVal(){
@@ -92,16 +120,23 @@ float[3] imuVal(){
 }
 
 
-void remplir_trame(){
-    
+void remplir_trame() {
+  memset(&trame, 0, sizeof(trame));
+  trame.identifiant = 1;
+  nb_imu_actuel = 0;
+  nb_mesure_actuel = 0;
+
+  gpsVal();   // timestamp + coordonnées
+
+  for (int i = 0; i < nb_mesures; i++) {
+    imuVal();    // norme accélération → imu_acc[i]
+    flexiVal();  // bits flex
+    nb_mesure_actuel++;
+  }
 }
 
 
 void envoyerTrame() {
-  memset(&trame, 0, sizeof(trame));
-  trame.timestamp = 1779264502; // A changer avec la vraie valeur depuis TinyGPS
-  trame.gps[0]    = 4576;  // latitude  ≈ 45.76° N
-  trame.gps[1]    = 470;   // longitude ≈  4.70° E
 
   // Simulation accélération (norme ×100, résolution 0.01 m/s²)
   for (int i = 0; i < NB_IMU; i++) {
@@ -125,6 +160,7 @@ void envoyerTrame() {
 
 void setup() {
   Serial.begin(9600);
+  Serial1.begin(9600)
   delay(3000);
   Serial.println("=== TX Simple ===");
   Serial.print("Taille trame : "); Serial.print(sizeof(Trame_complet)); Serial.println(" octets");
