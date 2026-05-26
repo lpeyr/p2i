@@ -88,12 +88,7 @@ const DEFAULT_FRAME: EulerFrame = {
 
 function PlayIcon({ className = "h-4 w-4" }: Readonly<ControlIconProps>) {
     return (
-        <svg
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-            className={className}
-            fill="currentColor"
-        >
+        <svg viewBox="0 0 24 24" aria-hidden="true" className={className} fill="currentColor">
             <path d="M8 6.5v11l9-5.5-9-5.5Z" />
         </svg>
     );
@@ -101,12 +96,7 @@ function PlayIcon({ className = "h-4 w-4" }: Readonly<ControlIconProps>) {
 
 function PauseIcon({ className = "h-4 w-4" }: Readonly<ControlIconProps>) {
     return (
-        <svg
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-            className={className}
-            fill="currentColor"
-        >
+        <svg viewBox="0 0 24 24" aria-hidden="true" className={className} fill="currentColor">
             <path d="M7 6h3v12H7zM14 6h3v12h-3z" />
         </svg>
     );
@@ -114,12 +104,7 @@ function PauseIcon({ className = "h-4 w-4" }: Readonly<ControlIconProps>) {
 
 function StopIcon({ className = "h-4 w-4" }: Readonly<ControlIconProps>) {
     return (
-        <svg
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-            className={className}
-            fill="currentColor"
-        >
+        <svg viewBox="0 0 24 24" aria-hidden="true" className={className} fill="currentColor">
             <path d="M7 7h10v10H7z" />
         </svg>
     );
@@ -379,7 +364,7 @@ function buildShoeMesh(): Mesh {
     const ridgeLine: number[] = [];
 
     const vertexIndex = (slice: number, segment: number) =>
-        slice * ringSegments + ((segment % ringSegments) + ringSegments) % ringSegments;
+        slice * ringSegments + (((segment % ringSegments) + ringSegments) % ringSegments);
 
     for (let slice = 0; slice < sliceCount; slice += 1) {
         const t = slice / (sliceCount - 1);
@@ -459,10 +444,7 @@ function buildShoeMesh(): Mesh {
     seamLines.push(ridgeLine.slice(2, -2));
 
     for (let slice = 7; slice <= 15; slice += 2) {
-        seamLines.push([
-            vertexIndex(slice, leftLaceIndex),
-            vertexIndex(slice, rightLaceIndex),
-        ]);
+        seamLines.push([vertexIndex(slice, leftLaceIndex), vertexIndex(slice, rightLaceIndex)]);
     }
 
     return { vertices, faces, seamLines };
@@ -494,9 +476,7 @@ function parseAngleData(text: string): EulerFrame[] {
         .filter((line) => line.length > 0);
 
     const delimiter =
-        (lines[0].match(/;/g)?.length ?? 0) > (lines[0].match(/,/g)?.length ?? 0)
-            ? ";"
-            : ",";
+        (lines[0].match(/;/g)?.length ?? 0) > (lines[0].match(/,/g)?.length ?? 0) ? ";" : ",";
     const firstRow = splitRow(lines[0], delimiter);
     const hasHeader = firstRow.some((cell) => Number.isNaN(Number.parseFloat(cell)));
 
@@ -703,11 +683,7 @@ export default function RightShoeAnimation() {
                 const edgeTwo = subtract(points3d[2], points3d[0]);
                 const normal = normalize(cross(edgeOne, edgeTwo));
                 const lightDirection = normalize({ x: -0.35, y: 0.92, z: -0.4 });
-                const lightAmount = clamp(
-                    0.58 + dot(normal, lightDirection) * 0.42,
-                    0.3,
-                    1.15,
-                );
+                const lightAmount = clamp(0.58 + dot(normal, lightDirection) * 0.42, 0.3, 1.15);
                 const baseColor = chooseFaceColor(faceCenter, normal);
                 const highlightedColor =
                     normal.y > 0.35
@@ -824,9 +800,7 @@ export default function RightShoeAnimation() {
             setLoadError(null);
         } catch (error) {
             setLoadError(
-                error instanceof Error
-                    ? error.message
-                    : "Le fichier selectionne est invalide.",
+                error instanceof Error ? error.message : "Le fichier selectionne est invalide.",
             );
         } finally {
             event.target.value = "";
@@ -947,9 +921,8 @@ export default function RightShoeAnimation() {
                 <div className={VIEWER_HIGHLIGHT_CLASS_NAME} />
                 <canvas ref={canvasRef} className="h-full w-full" />
                 <div className={READOUT_CLASS_NAME}>
-                    Yaw {currentFrame.yaw.toFixed(1)}&deg; / Pitch{" "}
-                    {currentFrame.pitch.toFixed(1)}&deg; / Roll{" "}
-                    {currentFrame.roll.toFixed(1)}&deg;
+                    Yaw {currentFrame.yaw.toFixed(1)}&deg; / Pitch {currentFrame.pitch.toFixed(1)}
+                    &deg; / Roll {currentFrame.roll.toFixed(1)}&deg;
                 </div>
                 <div className={CONTROL_WRAPPER_CLASS_NAME}>
                     <div className={CONTROL_STACK_CLASS_NAME}>
