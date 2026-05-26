@@ -46,11 +46,30 @@ const INITIAL_VIEW_ZOOM = 1.12;
 const MIN_ZOOM = 0.75;
 const MAX_ZOOM = 1.8;
 const SHOE_MESH = buildShoeMesh();
+const ROOT_CLASS_NAME =
+    "mt-4 space-y-4 rounded-2xl border border-separator bg-surface-secondary/40 p-4";
+const HEADER_CLASS_NAME = "flex flex-col gap-2 md:flex-row md:items-start md:justify-between";
+const TITLE_GROUP_CLASS_NAME = "space-y-1";
+const ACTIONS_CLASS_NAME = "flex flex-wrap gap-2";
 const CONTROL_BUTTON_CLASS_NAME =
     "flex h-10 w-10 items-center justify-center rounded-full border border-black/10 bg-white/90 shadow-md transition-colors hover:bg-white disabled:cursor-not-allowed disabled:opacity-45 dark:border-white/10 dark:bg-slate-900/85 dark:hover:bg-slate-900";
 const PLAY_BUTTON_CLASS_NAME = `${CONTROL_BUTTON_CLASS_NAME} text-green-600 dark:text-green-400`;
 const PAUSE_BUTTON_CLASS_NAME = `${CONTROL_BUTTON_CLASS_NAME} text-amber-500 dark:text-amber-300`;
 const STOP_BUTTON_CLASS_NAME = `${CONTROL_BUTTON_CLASS_NAME} text-red-600 dark:text-red-400`;
+const VIEWER_BASE_CLASS_NAME =
+    "relative h-80 touch-none overflow-hidden rounded-[1.75rem] border border-white/10 bg-gradient-to-br from-surface-secondary to-background";
+const VIEWER_GLOW_CLASS_NAME =
+    "pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(189,233,165,0.28),transparent_55%)]";
+const VIEWER_HIGHLIGHT_CLASS_NAME =
+    "pointer-events-none absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-white/14 to-transparent";
+const READOUT_CLASS_NAME =
+    "pointer-events-none absolute right-4 top-4 rounded-full bg-black/25 px-3 py-1 text-xs font-medium text-white backdrop-blur";
+const CONTROL_WRAPPER_CLASS_NAME = "pointer-events-none absolute left-4 top-4 flex justify-start";
+const CONTROL_STACK_CLASS_NAME =
+    "pointer-events-auto flex flex-col items-center gap-2 rounded-[1.5rem] border border-white/15 bg-black/30 p-2 shadow-lg backdrop-blur-md";
+const PROGRESS_CLASS_NAME = "space-y-2";
+const PROGRESS_LABEL_CLASS_NAME = "flex items-center justify-between text-xs font-medium";
+const PROGRESS_INPUT_CLASS_NAME = "accent-accent h-2 w-full cursor-pointer";
 
 const UPPER_COLOR: RGB = { r: 124, g: 170, b: 94 };
 const TOP_COLOR: RGB = { r: 148, g: 194, b: 116 };
@@ -554,6 +573,9 @@ export default function RightShoeAnimation() {
             ? DEFAULT_FRAME
             : (frames[frameIndex] ?? frames[0] ?? DEFAULT_FRAME);
     const visualFrameIndex = playbackState === "stopped" ? 0 : frameIndex;
+    const viewerClassName = `${VIEWER_BASE_CLASS_NAME} ${
+        isDragging ? "cursor-grabbing" : "cursor-grab"
+    }`;
 
     useEffect(() => {
         let isMounted = true;
@@ -875,25 +897,23 @@ export default function RightShoeAnimation() {
     }
 
     return (
-        <div className="border-separator bg-surface-secondary/40 mt-4 space-y-4 rounded-2xl border p-4">
-            <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
-                <div className="space-y-1">
+        <div className={ROOT_CLASS_NAME}>
+            <div className={HEADER_CLASS_NAME}>
+                <div className={TITLE_GROUP_CLASS_NAME}>
                     <h4 className="text-base font-semibold">Animation 3D de la semelle droite</h4>
                     <p className="text-muted-foreground text-sm">
                         Faites glisser pour orbiter autour de la chaussure et utilisez la molette
                         pour zoomer sans modifier l&apos;animation.
                     </p>
                 </div>
-                <div className="flex flex-wrap gap-2">
+                <div className={ACTIONS_CLASS_NAME}>
                     <Button
                         variant="secondary"
                         size="sm"
                         onClick={() => void loadBundledSample()}
                         isDisabled={isLoadingSample}
                     >
-                        {isLoadingSample
-                            ? "Chargement..."
-                            : "Charger l&apos;exemple"}
+                        {isLoadingSample ? "Chargement..." : "Charger l&apos;exemple"}
                     </Button>
                     <Button
                         variant="outline"
@@ -915,9 +935,7 @@ export default function RightShoeAnimation() {
 
             <div
                 ref={viewerRef}
-                className={`from-surface-secondary to-background relative h-80 overflow-hidden rounded-[1.75rem] border border-white/10 bg-gradient-to-br ${
-                    isDragging ? "cursor-grabbing" : "cursor-grab"
-                } touch-none`}
+                className={viewerClassName}
                 onPointerDown={handlePointerDown}
                 onPointerMove={handlePointerMove}
                 onPointerUp={finishPointerInteraction}
@@ -925,16 +943,16 @@ export default function RightShoeAnimation() {
                 onPointerLeave={finishPointerInteraction}
                 onWheel={handleWheel}
             >
-                <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(189,233,165,0.28),transparent_55%)]" />
-                <div className="pointer-events-none absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-white/14 to-transparent" />
+                <div className={VIEWER_GLOW_CLASS_NAME} />
+                <div className={VIEWER_HIGHLIGHT_CLASS_NAME} />
                 <canvas ref={canvasRef} className="h-full w-full" />
-                <div className="pointer-events-none absolute right-4 top-4 rounded-full bg-black/25 px-3 py-1 text-xs font-medium text-white backdrop-blur">
+                <div className={READOUT_CLASS_NAME}>
                     Yaw {currentFrame.yaw.toFixed(1)}&deg; / Pitch{" "}
                     {currentFrame.pitch.toFixed(1)}&deg; / Roll{" "}
                     {currentFrame.roll.toFixed(1)}&deg;
                 </div>
-                <div className="pointer-events-none absolute left-4 top-4 flex justify-start">
-                    <div className="pointer-events-auto flex flex-col items-center gap-2 rounded-[1.5rem] border border-white/15 bg-black/30 p-2 shadow-lg backdrop-blur-md">
+                <div className={CONTROL_WRAPPER_CLASS_NAME}>
+                    <div className={CONTROL_STACK_CLASS_NAME}>
                         <button
                             type="button"
                             aria-label="Play"
@@ -969,8 +987,8 @@ export default function RightShoeAnimation() {
                 </div>
             </div>
 
-            <div className="space-y-2">
-                <div className="flex items-center justify-between text-xs font-medium">
+            <div className={PROGRESS_CLASS_NAME}>
+                <div className={PROGRESS_LABEL_CLASS_NAME}>
                     <span className="text-muted-foreground">Debut</span>
                     <span className="text-muted-foreground">Fin</span>
                 </div>
@@ -981,7 +999,7 @@ export default function RightShoeAnimation() {
                     value={visualFrameIndex}
                     onChange={handleSeek}
                     disabled={frames.length === 0}
-                    className="accent-accent h-2 w-full cursor-pointer"
+                    className={PROGRESS_INPUT_CLASS_NAME}
                 />
             </div>
 
