@@ -4,9 +4,11 @@ import { Alert, Button, Card, CardHeader, Separator } from "@heroui/react";
 import { Moon, Sun } from "@gravity-ui/icons";
 import { useTheme } from "next-themes";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import type { Overview } from "@/actions/stats";
 import RightShoeAnimation from "@/components/right-shoe-animation";
+
+const emptySubscribe = () => () => {};
 
 export interface HomeProps {
     userName: string;
@@ -27,11 +29,7 @@ interface HomeSemelle {
 
 export default function Home({ userName, overview, semelles }: Readonly<HomeProps>) {
     const { resolvedTheme, setTheme } = useTheme();
-    const [mounted, setMounted] = useState(false);
-
-    useEffect(() => {
-        setMounted(true);
-    }, []);
+    const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
 
     const formatActiveTime = (seconds: number) => {
         if (seconds < 3600) {
