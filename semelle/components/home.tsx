@@ -4,7 +4,9 @@ import { Alert, Button, Card, CardHeader, Separator } from "@heroui/react";
 import { Moon, Sun } from "@gravity-ui/icons";
 import { useTheme } from "next-themes";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import type { Overview } from "@/actions/stats";
+import RightShoeAnimation from "@/components/right-shoe-animation";
 
 export interface HomeProps {
     userName: string;
@@ -24,7 +26,12 @@ interface HomeSemelle {
 }
 
 export default function Home({ userName, overview, semelles }: Readonly<HomeProps>) {
-    const { theme, setTheme } = useTheme();
+    const { resolvedTheme, setTheme } = useTheme();
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     const formatActiveTime = (seconds: number) => {
         if (seconds < 3600) {
@@ -49,6 +56,7 @@ export default function Home({ userName, overview, semelles }: Readonly<HomeProp
     const asymmetryPercent = maxSteps > 0 ? (stepGap / maxSteps) * 100 : 0;
     const isBalanced = asymmetryPercent < 10;
     const hasRecentActivity = semelles.some((semelle) => semelle.active) || overview.totalSteps > 0;
+    const isDark = mounted && resolvedTheme === "dark";
 
     const stats = [
         {
@@ -85,10 +93,10 @@ export default function Home({ userName, overview, semelles }: Readonly<HomeProp
                     <Button
                         isIconOnly
                         variant="secondary"
-                        onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                        aria-label={theme === "dark" ? "Mode clair" : "Mode sombre"}
+                        onClick={() => setTheme(isDark ? "light" : "dark")}
+                        aria-label={isDark ? "Mode clair" : "Mode sombre"}
                     >
-                        {theme === "dark" ? <Sun /> : <Moon />}
+                        {isDark ? <Sun /> : <Moon />}
                     </Button>
                 </section>
 
@@ -153,6 +161,7 @@ export default function Home({ userName, overview, semelles }: Readonly<HomeProp
                                             </p>
                                         </div>
                                     </div>
+                                    {semelle.side === "right" ? <RightShoeAnimation /> : null}
                                 </div>
                             </Card>
                         ))}

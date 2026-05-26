@@ -84,9 +84,9 @@ CREATE TABLE MesureIMU
 
 
 
-DELETE *
-FROM MesureFlexi;
-DELETE *
-FROM MesureGPS;
-DELETE *
-FROM MesureIMU;
+--DELETE *
+--FROM MesureFlexi;
+--DELETE *
+--FROM MesureGPS;
+--DELETE *
+--FROM MesureIMU;

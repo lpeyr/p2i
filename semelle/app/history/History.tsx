@@ -73,7 +73,7 @@ export function History({
 
                 {/* Filters & Search */}
                 <section className="space-y-4">
-                    <SearchField name="search">
+                    <SearchField name="search" aria-label="Rechercher une activité">
                         <SearchField.Group>
                             <SearchField.SearchIcon />
                             <SearchField.Input
@@ -89,6 +89,7 @@ export function History({
                         <Select
                             onChange={(v) => setSortBy(v as string)}
                             className="w-full sm:w-64"
+                            aria-label="Trier les activitÃ©s"
                             placeholder="Sélectionner un filtre"
                         >
                             <Label>Trier par</Label>
@@ -130,7 +131,7 @@ export function History({
                         label="Pas Totaux"
                         value={filteredActivities
                             .reduce((sum, a) => sum + a.steps, 0)
-                            .toLocaleString()}
+                            .toLocaleString("fr-FR")}
                     />
                     <StatSummary
                         label="Calories Brûlées"
@@ -203,7 +204,7 @@ function ActivityCard({ activity }: Readonly<ActivityItemProps>) {
                 <Separator />
                 <div className="flex flex-col">
                     <div className="grid grid-cols-4">
-                        <MetricBadge label="Pas" value={activity.steps.toLocaleString()} />
+                        <MetricBadge label="Pas" value={activity.steps.toLocaleString("fr-FR")} />
                         <MetricBadge label="Calories" value={activity.calories.toString()} />
                         <MetricBadge
                             label="Vitesse Moy."

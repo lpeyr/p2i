@@ -1,13 +1,7 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import "./globals.css";
 import NavBar from "@/components/nav";
 import { Providers } from "@/providers";
-
-const inter = Inter({
-    variable: "--font-inter",
-    subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
     title: "Semelle",
@@ -20,7 +14,7 @@ export default function RootLayout({
     children: React.ReactNode;
 }>) {
     return (
-        <html lang="en" className={`${inter.variable} h-full antialiased`}>
+        <html lang="en" className="h-full antialiased" suppressHydrationWarning>
             <body className="bg-background text-foreground flex min-h-full flex-col">
                 <Providers>
                     {children}
