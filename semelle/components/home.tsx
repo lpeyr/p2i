@@ -29,7 +29,11 @@ interface HomeSemelle {
 
 export default function Home({ userName, overview, semelles }: Readonly<HomeProps>) {
     const { resolvedTheme, setTheme } = useTheme();
-    const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
+    const mounted = useSyncExternalStore(
+        emptySubscribe,
+        () => true,
+        () => false,
+    );
 
     const formatActiveTime = (seconds: number) => {
         if (seconds < 3600) {
