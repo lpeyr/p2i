@@ -1,0 +1,26 @@
+services:
+  mariadb:
+    image: mariadb:latest
+    container_name: mariadb
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: rootpassword
+      MARIADB_DATABASE: mydb
+      MARIADB_USER: myuser
+      MARIADB_PASSWORD: mypassword
+    ports:
+      - "3306:3306"
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    networks:
+      - mdb_network
+
+volumes:
+  mariadb_data:
+
+networks:
+  mdb_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.20.0.0/16
