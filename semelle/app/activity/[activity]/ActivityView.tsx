@@ -1,7 +1,7 @@
 "use client";
 
 import { Card, CardHeader, Chip, Separator } from "@heroui/react";
-import MapView from "@/components/map";
+import dynamic from "next/dynamic";
 import {
     FootCard,
     StatCard,
@@ -11,6 +11,10 @@ import {
     formatStartTime,
     type FootContactValues,
 } from "../ActivityUtils";
+
+const MapView = dynamic(() => import("@/components/map"), {
+    ssr: false,
+});
 
 export interface ActivityViewProps {
     activityId: number;
