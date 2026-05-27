@@ -5,7 +5,7 @@
     "tabWidth": 4,
     "semi": true,
     "bracketSpacing": true,
-    "endOfLine": "auto",
+    "endOfLine": "lf",
     "htmlWhitespaceSensitivity": "ignore",
     "plugins": ["prettier-plugin-tailwindcss"]
 }
