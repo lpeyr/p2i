@@ -88,7 +88,9 @@ CREATE TABLE MesureAngle
 (
     idMesureAngle INT(10) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     time          TIMESTAMP DEFAULT CURRENT_TIMESTAMP(),
-    angle         FLOAT(4, 2) NOT NULL,
+    yaw           FLOAT(4, 2) NOT NULL,
+    pitch         FLOAT(4, 2) NOT NULL,
+    roll          FLOAT(4, 2) NOT NULL,
     idSession     INT(10) UNSIGNED NOT NULL,
     idSemelle     INT(10) UNSIGNED NOT NULL,
     FOREIGN KEY (idSession) REFERENCES Session (idSession),
