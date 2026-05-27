@@ -1,0 +1,7 @@
+{
+    "host": "6.tcp.eu.ngrok.io",
+    "port": "21274",
+    "user": "root",
+    "password": "rootpassword",
+    "database": "G221_C_BD1"
+}
