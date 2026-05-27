@@ -887,7 +887,7 @@ export default function RightShoeAnimation() {
                         onClick={() => void loadBundledSample()}
                         isDisabled={isLoadingSample}
                     >
-                        {isLoadingSample ? "Chargement..." : "Charger l&apos;exemple"}
+                        {isLoadingSample ? "Chargement..." : "Charger l'exemple"}
                     </Button>
                     <Button
                         variant="outline"
