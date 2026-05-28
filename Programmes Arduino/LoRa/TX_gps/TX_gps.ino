@@ -30,9 +30,10 @@ typedef struct __attribute__((packed)) {
   uint8_t  bits_f1[NB_FLEX_OCT];   // 5 octets
   uint8_t  bits_f2[NB_FLEX_OCT];   // 5 octets
   uint8_t  bits_f3[NB_FLEX_OCT];   // 5 octets
+  uint16_t gps[2];                  // 4 octets — [0]=lat, [1]=lng
   int16_t  imu_acc[NB_IMU];         // 40 octets
 } Trame_complet;
-// Total: 60 octets
+// Total: 64 octets
 
 
 // --- Objets ---
@@ -79,6 +80,27 @@ uint32_t gpsToTimestamp(TinyGPSDate &d, TinyGPSTime &t) {
   days += day - 1;
   return days * 86400UL + t.hour() * 3600UL + t.minute() * 60UL + t.second();
 }
+
+bool lireGPS(unsigned long timeout_ms) {
+  unsigned long debut = millis();
+  while (millis() - debut < timeout_ms) {
+    while (Serial1.available()) {
+      char c = Serial1.read();
+      if (gps.encode(c) && gps.location.isValid()) return true;
+    }
+  }
+  return false;
+}
+
+void gpsVal() {
+  bool gps_ok = lireGPS(5000);
+  if (gps_ok) {
+    trame.gps[0]    = (uint16_t)(gps.location.lat() * 100);
+    trame.gps[1]    = (uint16_t)(gps.location.lng() * 100);
+    trame.timestamp = gpsToTimestamp(gps.date, gps.time);
+  }
+}
+
 
 // ─── Flex ────────────────────────────────────────────────────────────────────
 void flexi_val() {
@@ -158,12 +180,23 @@ void imuValAngle() {
 }
 
 
-// ─── Remplissage trame (collecte sur 20s) ───────────────────────────────
+// ─── Remplissage trame ───────────────────────────────────────────────────────
+//
+// Chronologie sur 20s :
+//   t=0       → GPS (1 seule mesure, bloquante max 5s)
+//   t=0..20s  → Flex  toutes les 500ms  → 40 mesures = NB_FLEX_OCT*8 bits
+//   t=0..20s  → Accel toutes les 1000ms → 20 mesures = NB_IMU
+//   compteur >= 15 (≈5min) :
+//   t=0..20s  → Angle toutes les 100ms  → 200 val/trame, cumul jusqu'à 1250
+//
 void remplir_trame() {
   memset(&trame, 0, sizeof(trame));
   trame.identifiant  = 1;
   nbr_imu_acc_actuel = 0;
   nb_mesure_actuel   = 0;
+
+  // 1) GPS — une seule mesure au début
+  gpsVal();
 
   unsigned long t_debut      = millis();
   unsigned long t_last_flex  = t_debut;

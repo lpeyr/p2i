@@ -97,24 +97,29 @@ class AppliProd:
             print("MySQL [INSERTION ERROR]")
             print(e)
 
-    def find_idSessionSemelle(self):
+    def find_idSessionSemelle(self, side):
         try:
             self.cursor.execute(
-                "SELECT idSession, semelle1 FROM Session WHERE dateFin IS NULL;"
+                """
+                SELECT Session.idSession, Semelle.idSemelle
+                FROM Session
+                JOIN Semelle ON (Semelle.idSemelle = Session.semelle1 OR Semelle.idSemelle = Session.semelle2)
+                WHERE Semelle.side = %s
+                AND Session.dateFin IS NULL;
+                """, (side)
             )
             rows = self.cursor.fetchall()
 
             if len(rows) == 0:
                 print("Pas de session active")
                 return None, None
-            elif len(rows) > 1:
+            else:
                 print("Plusieurs sessions actives détectées")
-            idSession, semelle1 = rows[0]
-            return idSession, semelle1
+            idSession, idSemelle = rows[0] # On prend la première session active trouvée (si plusieurs, c'est un problème de gestion des sessions)
+            return idSession, idSemelle
 
         except Exception as e:
-            print("MySQL [SELECT ERROR]")
-            print(e)
+            print(f"Erreur  : {e}")
             return None, None
 
     def recuperer_fichier_txt_serial(self, port=None, baudrate=9600, timeout=5):
@@ -165,19 +170,22 @@ class AppliProd:
             json.dump(val, f, indent=4)
 
     
-    def add_angle_to_db(self, mesure, idSession, idSemelle):
+    def add_angle_to_db(self, data, idSession, idSemelle):
         try:
             self.connexion_bd()
             cursor = self.connexion_bd_commune.cursor()
-            cursor.execute(
-                "INSERT INTO MesureAngle (time,angle,idSession,idSemelle) VALUES (%s,%s,%s,%s)",
-                (
-                    mesure.get("timestamp"),
-                    json.dumps(mesure.get("angle")),
-                    idSession,
-                    idSemelle,
-                ),
-            )
+            for i in range(len(data.get("yaw"))):
+                cursor.execute(
+                    "INSERT INTO MesureAngle (time,yaw,pitch,roll,idSession,idSemelle) VALUES (%s,%s,%s,%s)",
+                    (
+                        float(data.get("timestamp")) + i * 0.1,
+                        data.get("yaw")[i],
+                        data.get("pitch")[i],
+                        data.get("roll")[i],
+                        idSession,
+                        idSemelle,
+                    ),
+                )
             self.connexion_bd_commune.commit()
             print("✓ Mesure insérée avec succès")
         except Exception as e:
@@ -193,7 +201,10 @@ while appli.find_arduino_port():
     if fichier_txt:
         print("Données reçues")
         appli.save_text_to_file(fichier_txt)
-        print("Données sauvegardées dans data_received.json")
+        data = json.loads(fichier_txt)
+        idSession, idSemelle = appli.find_idSessionSemelle(data["side"])
+        appli.add_angle_to_db(data, idSession, idSemelle)
+        print("Données sauvegardées dans la base de données")
     else:
         print("Aucune donnée reçue dans le délai imparti.")
     

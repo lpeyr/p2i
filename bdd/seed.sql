@@ -24,5 +24,5 @@ VALUES ('EL-HAMDEOUI', 'Marouan', 'admin', 20, 100, 185);
 -- Insère 2 semelles (droite et gauche)
 INSERT INTO Semelle (idUser, devEUI, side)
 VALUES 
-    (1, '221C221C221C221C1', 'right'),
-    (1, '221C221C221C221C2', 'left');
+    (1, '221C221C221C221C', 'right'),
+    (1, '221C221C221C221C', 'left');
