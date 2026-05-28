@@ -58,6 +58,7 @@ float         tabPitch[NB_MAX_ANGLE];
 float         tabYaw[NB_MAX_ANGLE];
 uint32_t      timestamp_first_angle = 0;
 bool          firstAngleTimestampSet = false;
+uint32_t      timestamp_angle_fail = 0;
 
 
 // ─── Utilitaires bits ────────────────────────────────────────────────────────
@@ -169,8 +170,14 @@ void imuValAngle() {
 
   if (nbr_imu_agl_actuel < NB_MAX_ANGLE) {
     if (!firstAngleTimestampSet) {
-      timestamp_first_angle = gpsToTimestamp(gps.date, gps.time);
-      firstAngleTimestampSet = true;
+      if (gps.date.isValid() && gps.time.isValid()) {
+        timestamp_first_angle = gpsToTimestamp(gps.date, gps.time) - timestamp_angle_fail / 1000;
+        firstAngleTimestampSet = true;
+      };else if (!gps.date.isValid() && !gps.time.isValid() && timestamp_angle_fail == 0) {
+        // Si GPS invalide, on utilise millis() pour estimer le timestamp du premier angle avec le prochain timestamp GPS valide
+        timestamp_angle_fail = millis();
+      }
+
     }
     tabRoll [nbr_imu_agl_actuel] = fusion.getRoll()  * PI / 180.0f;
     tabPitch[nbr_imu_agl_actuel] = fusion.getPitch() * PI / 180.0f;
@@ -296,7 +303,7 @@ void loop() {
     // Print angles si Serial branché
   if (Serial) {
     Serial.print("{\"side\":\"");
-    Serial.print(side);
+    Serial.print(SIDE);
     Serial.print("\",\"timestamp\":");
     Serial.print(timestamp_first_angle);
     Serial.print(",\"roll\":[");
