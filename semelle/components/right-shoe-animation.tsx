@@ -5,7 +5,7 @@ import { useEffect, useEffectEvent, useRef, useState } from "react";
 
 type PlaybackState = "stopped" | "playing" | "paused";
 
-interface EulerFrame {
+export interface EulerFrame {
     index: number;
     yaw: number;
     pitch: number;

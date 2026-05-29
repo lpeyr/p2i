@@ -5,7 +5,7 @@ import { Moon, Sun } from "@gravity-ui/icons";
 import { useTheme } from "next-themes";
 import Link from "next/link";
 import { useSyncExternalStore } from "react";
-import type { Overview } from "@/actions/stats";
+import type { AnimationFrame, Overview } from "@/actions/stats";
 import RightShoeAnimation, {
     EXAMPLE_FRAMES,
     EXAMPLE_FRAMES2,
@@ -29,6 +29,7 @@ interface HomeSemelle {
     distanceKm: number;
     caloriesKcal: number;
     lastTimeActive: string | null;
+    animations?: AnimationFrame[];
 }
 
 export default function Home({ userName, overview, semelles }: Readonly<HomeProps>) {
@@ -167,15 +168,18 @@ export default function Home({ userName, overview, semelles }: Readonly<HomeProp
                                             </p>
                                         </div>
                                     </div>
-                                    {semelle.side === "left" ? (
-                                        <ShoeAnimation side="left" initialFrames={EXAMPLE_FRAMES} />
-                                    ) : null}
-                                    {semelle.side === "right" ? (
+                                    {semelle.animations && semelle.side === "left" && (
+                                        <ShoeAnimation
+                                            side="left"
+                                            initialFrames={semelle.animations.length > 0 ? semelle.animations : EXAMPLE_FRAMES}
+                                        />
+                                    )}
+                                    {semelle.animations && semelle.side === "right" && (
                                         <ShoeAnimation
                                             side="right"
-                                            initialFrames={EXAMPLE_FRAMES2}
+                                            initialFrames={semelle.animations.length > 0 ? semelle.animations : EXAMPLE_FRAMES2}
                                         />
-                                    ) : null}
+                                    )}
                                 </div>
                             </Card>
                         ))}

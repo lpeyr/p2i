@@ -62,6 +62,33 @@ function estimateDistanceFromSteps(steps: number): number {
     return Number((steps * ESTIMATED_DISTANCE_PER_STEP_METERS).toFixed(2));
 }
 
+export interface AnimationFrame {
+    index: number;
+    yaw: number;
+    pitch: number;
+    roll: number;
+}
+
+export async function getAnimationData(
+    idSemelle: number,
+): Promise<AnimationFrame[]> {
+    const rows = await query<
+        Array<{ idMesureAngle: number; yaw: number; pitch: number; roll: number }>
+    >(
+        "SELECT idMesureAngle, yaw, pitch, roll FROM MesureAngle WHERE idSemelle = ?",
+        [idSemelle],
+    );
+
+    return rows.map((row) => ({
+        index: row.idMesureAngle,
+        yaw: row.yaw,
+        pitch: row.pitch,
+        roll: row.roll,
+    }));
+}
+
+
+
 async function getSemelleStepTotal(
     semelleId: number,
     startSql: string,
@@ -139,8 +166,9 @@ async function getSemelleStat(
     const distance = estimateDistanceFromSteps(step);
     const calories = estimateCaloriesFromSteps(step);
     const lastTimeActive = await getSemelleLastActivity(semelle.idSemelle, startSql, endSql);
+    const animations = await getAnimationData(semelle.idSemelle);
 
-    return { semelle, step, distance, calories, lastTimeActive };
+    return { semelle, step, distance, calories, lastTimeActive, animations };
 }
 
 /**
@@ -198,6 +226,7 @@ interface SemelleStat {
     calories: number;
     distance: number;
     lastTimeActive: Date | null;
+    animations?: AnimationFrame[];
 }
 
 async function getSemellesStatsImpl(dateStart: Date, dateEnd: Date): Promise<SemelleStat[]> {
