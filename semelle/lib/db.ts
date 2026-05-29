@@ -105,10 +105,10 @@ export interface MesureAccel {
 
 export interface MesureAngle {
     idMesureAngle: DbId;
-    time :DbTimestamp;
-    yaw : number;
-    pitch : number;
-    roll : number ;
+    time: DbTimestamp;
+    yaw: number;
+    pitch: number;
+    roll: number;
     idSession: DbId;
     idSemelle: DbId;
 }
