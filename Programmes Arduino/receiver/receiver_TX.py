@@ -163,11 +163,7 @@ class AppliProd:
             if "arduino" in port.description.lower():
                 return port.device
         return None
-    
-    def save_text_to_file(self, text, filename = "data_received.json"):
-        val = json.loads(text)
-        with open(filename, "w") as f:
-            json.dump(val, f, indent=4)
+
 
     
     def add_angle_to_db(self, data, idSession, idSemelle):
