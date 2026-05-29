@@ -167,13 +167,21 @@ export default function Home({ userName, overview, semelles }: Readonly<HomeProp
                                     {semelle.animations && semelle.side === "left" && (
                                         <ShoeAnimation
                                             side="left"
-                                            initialFrames={semelle.animations.length > 0 ? semelle.animations : EXAMPLE_FRAMES}
+                                            initialFrames={
+                                                semelle.animations.length > 0
+                                                    ? semelle.animations
+                                                    : EXAMPLE_FRAMES
+                                            }
                                         />
                                     )}
                                     {semelle.animations && semelle.side === "right" && (
                                         <ShoeAnimation
                                             side="right"
-                                            initialFrames={semelle.animations.length > 0 ? semelle.animations : EXAMPLE_FRAMES2}
+                                            initialFrames={
+                                                semelle.animations.length > 0
+                                                    ? semelle.animations
+                                                    : EXAMPLE_FRAMES2
+                                            }
                                         />
                                     )}
                                 </div>

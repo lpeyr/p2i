@@ -69,15 +69,10 @@ export interface AnimationFrame {
     roll: number;
 }
 
-export async function getAnimationData(
-    idSemelle: number,
-): Promise<AnimationFrame[]> {
+export async function getAnimationData(idSemelle: number): Promise<AnimationFrame[]> {
     const rows = await query<
         Array<{ idMesureAngle: number; yaw: number; pitch: number; roll: number }>
-    >(
-        "SELECT idMesureAngle, yaw, pitch, roll FROM MesureAngle WHERE idSemelle = ?",
-        [idSemelle],
-    );
+    >("SELECT idMesureAngle, yaw, pitch, roll FROM MesureAngle WHERE idSemelle = ?", [idSemelle]);
 
     return rows.map((row) => ({
         index: row.idMesureAngle,
@@ -86,8 +81,6 @@ export async function getAnimationData(
         roll: row.roll,
     }));
 }
-
-
 
 async function getSemelleStepTotal(
     semelleId: number,
