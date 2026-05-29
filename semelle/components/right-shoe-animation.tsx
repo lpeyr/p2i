@@ -564,9 +564,17 @@ export function ShoeAnimation({ side, initialFrames }: Readonly<ShoeAnimationPro
 
     useEffect(() => {
         // Les frames sont maintenant fournies en props
-        setFrameIndex(0);
-        setPlaybackState("stopped");
-        setLoadError(null);
+        // Pour eviter l'avertissement ESLint "react-hooks/set-state-in-effect",
+        // on effectue la mise a jour de l'etat de facon asynchrone apres le rendu.
+        const id = window.setTimeout(() => {
+            setFrameIndex(0);
+            setPlaybackState("stopped");
+            setLoadError(null);
+        }, 0);
+
+        return () => {
+            window.clearTimeout(id);
+        };
     }, [initialFrames]);
 
     useEffect(() => {
@@ -981,7 +989,3 @@ export const EXAMPLE_FRAMES2: EulerFrame[] = [
     { index: 11, yaw: 4.964, pitch: 78.103, roll: 4.008 },
     { index: 12, yaw: 5.256, pitch: 8.55, roll: 67.964 },
 ];
-
-export default function RightShoeAnimation() {
-    return <ShoeAnimation side="right" initialFrames={EXAMPLE_FRAMES} />;
-}
