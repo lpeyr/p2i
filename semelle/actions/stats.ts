@@ -104,7 +104,7 @@ async function getSemelleLastActivity(
                AND time BETWEEN ? AND ?
              UNION ALL
              SELECT time AS last_activity
-             FROM MesureIMU
+             FROM MesureAccel
              WHERE idSemelle = ?
                AND time BETWEEN ? AND ?
          ) AS activity_times`,
