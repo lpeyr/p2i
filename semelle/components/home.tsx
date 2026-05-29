@@ -6,7 +6,7 @@ import { useTheme } from "next-themes";
 import Link from "next/link";
 import { useSyncExternalStore } from "react";
 import type { Overview } from "@/actions/stats";
-import RightShoeAnimation from "@/components/right-shoe-animation";
+import RightShoeAnimation, { EXAMPLE_FRAMES, EXAMPLE_FRAMES2, ShoeAnimation } from "@/components/right-shoe-animation";
 
 const emptySubscribe = () => () => {};
 
@@ -163,7 +163,8 @@ export default function Home({ userName, overview, semelles }: Readonly<HomeProp
                                             </p>
                                         </div>
                                     </div>
-                                    {semelle.side === "right" ? <RightShoeAnimation /> : null}
+                                    {semelle.side === "left" ? <ShoeAnimation side="left" initialFrames={EXAMPLE_FRAMES}  /> : null}
+                                    {semelle.side === "right" ? <ShoeAnimation side = "right" initialFrames={EXAMPLE_FRAMES2}/> : null}
                                 </div>
                             </Card>
                         ))}
