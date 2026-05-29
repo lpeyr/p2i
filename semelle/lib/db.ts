@@ -94,8 +94,8 @@ export type MesureFlexiInsert = {
 };
 export type MesureFlexiUpdate = Partial<Omit<MesureFlexiInsert, "idSession" | "idSemelle">>;
 
-// Table: MesureIMU
-export interface MesureIMU {
+// Table: MesureAccel
+export interface MesureAccel {
     id: DbId;
     time: DbTimestamp;
     accel: number;
@@ -103,13 +103,15 @@ export interface MesureIMU {
     idSemelle: DbId;
 }
 
-export type MesureIMUInsert = {
-    accel: number;
+export interface MesureAngle {
+    idMesureAngle: DbId;
+    time: DbTimestamp;
+    yaw: number;
+    pitch: number;
+    roll: number;
     idSession: DbId;
     idSemelle: DbId;
-    time?: DbTimestamp;
-};
-export type MesureIMUUpdate = Partial<Omit<MesureIMUInsert, "idSession" | "idSemelle">>;
+}
 
 // Maps utilitaires pour centraliser tous les types de tables
 export interface DbModels {
@@ -118,7 +120,8 @@ export interface DbModels {
     session: Session;
     mesureGPS: MesureGPS;
     mesureFlexi: MesureFlexi;
-    mesureIMU: MesureIMU;
+    mesureAccel: MesureAccel;
+    mesureAngle: MesureAngle;
 }
 
 export interface DbInsertModels {
@@ -127,7 +130,6 @@ export interface DbInsertModels {
     session: SessionInsert;
     mesureGPS: MesureGPSInsert;
     mesureFlexi: MesureFlexiInsert;
-    mesureIMU: MesureIMUInsert;
 }
 
 export interface DbUpdateModels {
@@ -136,7 +138,6 @@ export interface DbUpdateModels {
     session: SessionUpdate;
     mesureGPS: MesureGPSUpdate;
     mesureFlexi: MesureFlexiUpdate;
-    mesureIMU: MesureIMUUpdate;
 }
 
 export const pool = mariadb.createPool({

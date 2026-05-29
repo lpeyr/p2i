@@ -162,7 +162,7 @@ function Ensure-DatabaseSchema {
 
     $tableCount = 0
     try {
-        $tableCount = [int](Invoke-MariaDbScalar -Database "" -Sql "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = '$($script:DbName)' AND table_name IN ('Utilisateur', 'Semelle', 'Session', 'MesureGPS', 'MesureFlexi', 'MesureIMU');")
+        $tableCount = [int](Invoke-MariaDbScalar -Database "" -Sql "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = '$($script:DbName)' AND table_name IN ('Utilisateur', 'Semelle', 'Session', 'MesureGPS', 'MesureFlexi', 'MesureAccel');")
     } catch {
         $tableCount = 0
     }
@@ -219,7 +219,7 @@ VALUES
     ('2026-05-27 08:36:05', 0, 1, 0, 1, 2),
     ('2026-05-27 08:43:05', 1, 1, 1, 1, 2);
 
-INSERT INTO MesureIMU (time, accel, idSession, idSemelle)
+INSERT INTO MesureAccel (time, accel, idSession, idSemelle)
 VALUES
     ('2026-05-27 08:16:00', 0.92, 1, 1),
     ('2026-05-27 08:18:00', 1.08, 1, 1),

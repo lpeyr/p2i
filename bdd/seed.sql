@@ -1,12 +1,12 @@
 -- Supprime toutes les données des tables
 
-DELETE FROM MesureAccel;
-DELETE FROM MesureAngle;
-DELETE FROM MesureFlexi;
-DELETE FROM MesureGPS;
-DELETE FROM Session;
-DELETE FROM Semelle;
-DELETE FROM Utilisateur;
+-- DELETE FROM MesureAccel;
+-- DELETE FROM MesureAngle;
+-- DELETE FROM MesureFlexi;
+-- DELETE FROM MesureGPS;
+-- DELETE FROM Session;
+-- DELETE FROM Semelle;
+-- DELETE FROM Utilisateur;
 
 -- Réinitialise les auto-increment
 ALTER TABLE Utilisateur AUTO_INCREMENT = 1;

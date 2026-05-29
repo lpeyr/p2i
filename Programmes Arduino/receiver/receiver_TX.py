@@ -80,7 +80,7 @@ class AppliProd:
             
             # Insertion des mesures IMU
             cursor.executemany(
-                "INSERT INTO MesureIMU (time,accel,idSession,idSemelle) VALUES (%s,%s,%s,%s)",
+                "INSERT INTO MesureAccel (time,accel,idSession,idSemelle) VALUES (%s,%s,%s,%s)",
                 [
                     (
                         dict_accel.get("timestamp"),

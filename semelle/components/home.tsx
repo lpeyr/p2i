@@ -5,8 +5,8 @@ import { Moon, Sun } from "@gravity-ui/icons";
 import { useTheme } from "next-themes";
 import Link from "next/link";
 import { useSyncExternalStore } from "react";
-import type { Overview } from "@/actions/stats";
-import RightShoeAnimation from "@/components/right-shoe-animation";
+import type { AnimationFrame, Overview } from "@/actions/stats";
+import { EXAMPLE_FRAMES, EXAMPLE_FRAMES2, ShoeAnimation } from "@/components/right-shoe-animation";
 
 const emptySubscribe = () => () => {};
 
@@ -25,6 +25,7 @@ interface HomeSemelle {
     distanceKm: number;
     caloriesKcal: number;
     lastTimeActive: string | null;
+    animations?: AnimationFrame[];
 }
 
 export default function Home({ userName, overview, semelles }: Readonly<HomeProps>) {
@@ -163,7 +164,26 @@ export default function Home({ userName, overview, semelles }: Readonly<HomeProp
                                             </p>
                                         </div>
                                     </div>
-                                    {semelle.side === "right" ? <RightShoeAnimation /> : null}
+                                    {semelle.animations && semelle.side === "left" && (
+                                        <ShoeAnimation
+                                            side="left"
+                                            initialFrames={
+                                                semelle.animations.length > 0
+                                                    ? semelle.animations
+                                                    : EXAMPLE_FRAMES
+                                            }
+                                        />
+                                    )}
+                                    {semelle.animations && semelle.side === "right" && (
+                                        <ShoeAnimation
+                                            side="right"
+                                            initialFrames={
+                                                semelle.animations.length > 0
+                                                    ? semelle.animations
+                                                    : EXAMPLE_FRAMES2
+                                            }
+                                        />
+                                    )}
                                 </div>
                             </Card>
                         ))}

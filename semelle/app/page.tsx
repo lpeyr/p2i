@@ -27,6 +27,7 @@ export default async function HomePage() {
         distanceKm: Number((stat.distance / 1000).toFixed(2)),
         caloriesKcal: Number(stat.calories.toFixed(2)),
         lastTimeActive: stat.lastTimeActive?.toISOString() ?? null,
+        animations: stat.animations,
     }));
 
     const homeProps: HomeProps = { userName: user.prenom, overview, semelles };

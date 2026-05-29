@@ -89,7 +89,7 @@ async function getSessionStatsImpl(sessionId: number): Promise<SessionStatsBySem
         );
 
         const imuRows = await query<Array<{ accel: number }>>(
-            "SELECT accel FROM MesureIMU WHERE idSession = ? AND idSemelle = ? ORDER BY time, id",
+            "SELECT accel FROM MesureAccel WHERE idSession = ? AND idSemelle = ? ORDER BY time, idMesureAccel",
             [sessionId, semelleId],
         );
 

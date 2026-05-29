@@ -151,7 +151,7 @@ void imuValAngle() {
       if (gps.date.isValid() && gps.time.isValid()) {
         timestamp_first_angle = gpsToTimestamp(gps.date, gps.time) - timestamp_angle_fail / 1000;
         firstAngleTimestampSet = true;
-      };else if (!gps.date.isValid() && !gps.time.isValid() && timestamp_angle_fail == 0) {
+      }else if (!gps.date.isValid() && !gps.time.isValid() && timestamp_angle_fail == 0) {
         // Si GPS invalide, on utilise millis() pour estimer le timestamp du premier angle avec le prochain timestamp GPS valide
         timestamp_angle_fail = millis();
       }

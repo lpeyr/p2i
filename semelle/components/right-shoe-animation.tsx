@@ -5,7 +5,7 @@ import { useEffect, useEffectEvent, useRef, useState } from "react";
 
 type PlaybackState = "stopped" | "playing" | "paused";
 
-interface EulerFrame {
+export interface EulerFrame {
     index: number;
     yaw: number;
     pitch: number;
@@ -527,12 +527,17 @@ function parseAngleData(text: string): EulerFrame[] {
     return frames;
 }
 
-export default function RightShoeAnimation() {
-    const [frames, setFrames] = useState<EulerFrame[]>([]);
+interface ShoeAnimationProps {
+    side: "left" | "right";
+    initialFrames: EulerFrame[];
+}
+
+export function ShoeAnimation({ side, initialFrames }: Readonly<ShoeAnimationProps>) {
+    const [frames, setFrames] = useState<EulerFrame[]>(initialFrames);
     const [frameIndex, setFrameIndex] = useState(0);
     const [playbackState, setPlaybackState] = useState<PlaybackState>("stopped");
     const [loadError, setLoadError] = useState<string | null>(null);
-    const [isLoadingSample, setIsLoadingSample] = useState(true);
+    const [isLoadingSample, setIsLoadingSample] = useState(false);
     const [viewYaw, setViewYaw] = useState(INITIAL_VIEW_YAW);
     const [viewPitch, setViewPitch] = useState(INITIAL_VIEW_PITCH);
     const [viewZoom, setViewZoom] = useState(INITIAL_VIEW_ZOOM);
@@ -558,50 +563,19 @@ export default function RightShoeAnimation() {
     }`;
 
     useEffect(() => {
-        let isMounted = true;
-
-        async function bootstrapSample() {
-            try {
-                const response = await fetch(SAMPLE_FILE_URL, { cache: "force-cache" });
-
-                if (!response.ok) {
-                    throw new Error("Impossible de charger l'echantillon de marche.");
-                }
-
-                const text = await response.text();
-                const parsedFrames = parseAngleData(text);
-
-                if (!isMounted) {
-                    return;
-                }
-
-                setFrames(parsedFrames);
-                setFrameIndex(0);
-                setPlaybackState("stopped");
-                setLoadError(null);
-            } catch (error) {
-                if (!isMounted) {
-                    return;
-                }
-
-                setLoadError(
-                    error instanceof Error
-                        ? error.message
-                        : "Le chargement de l'echantillon a echoue.",
-                );
-            } finally {
-                if (isMounted) {
-                    setIsLoadingSample(false);
-                }
-            }
-        }
-
-        void bootstrapSample();
+        // Les frames sont maintenant fournies en props
+        // Pour eviter l'avertissement ESLint "react-hooks/set-state-in-effect",
+        // on effectue la mise a jour de l'etat de facon asynchrone apres le rendu.
+        const id = window.setTimeout(() => {
+            setFrameIndex(0);
+            setPlaybackState("stopped");
+            setLoadError(null);
+        }, 0);
 
         return () => {
-            isMounted = false;
+            window.clearTimeout(id);
         };
-    }, []);
+    }, [initialFrames]);
 
     useEffect(() => {
         if (playbackState !== "playing" || frames.length === 0) {
@@ -874,7 +848,9 @@ export default function RightShoeAnimation() {
         <div className={ROOT_CLASS_NAME}>
             <div className={HEADER_CLASS_NAME}>
                 <div className={TITLE_GROUP_CLASS_NAME}>
-                    <h4 className="text-base font-semibold">Animation 3D de la semelle droite</h4>
+                    <h4 className="text-base font-semibold">
+                        Animation 3D de la semelle {side === "left" ? "gauche" : "droite"}
+                    </h4>
                     <p className="text-muted-foreground text-sm">
                         Faites glisser pour orbiter autour de la chaussure et utilisez la molette
                         pour zoomer sans modifier l&apos;animation.
@@ -980,3 +956,36 @@ export default function RightShoeAnimation() {
         </div>
     );
 }
+
+// Données d'exemple pour initialiser l'animation
+export const EXAMPLE_FRAMES: EulerFrame[] = [
+    { index: 0, yaw: 0.0, pitch: 1.372, roll: 6.072 },
+    { index: 1, yaw: 0.53, pitch: 3.603, roll: 5.916 },
+    { index: 2, yaw: 1.056, pitch: 5.758, roll: 5.724 },
+    { index: 3, yaw: 1.574, pitch: 7.808, roll: 5.507 },
+    { index: 4, yaw: 2.08, pitch: 9.725, roll: 5.277 },
+    { index: 5, yaw: 2.569, pitch: 11.484, roll: 5.044 },
+    { index: 6, yaw: 3.038, pitch: 13.064, roll: 4.816 },
+    { index: 7, yaw: 3.484, pitch: 14.45, roll: 4.602 },
+    { index: 8, yaw: 3.902, pitch: 15.629, roll: 4.408 },
+    { index: 9, yaw: 4.289, pitch: 16.594, roll: 87.236 },
+    { index: 10, yaw: 4.642, pitch: 17.45, roll: 4.102 },
+    { index: 11, yaw: 4.964, pitch: 18.103, roll: 90.008 },
+    { index: 12, yaw: 5.256, pitch: 18.55, roll: 3.964 },
+];
+
+export const EXAMPLE_FRAMES2: EulerFrame[] = [
+    { index: 0, yaw: 0.0, pitch: 2.78, roll: 2.072 },
+    { index: 1, yaw: 0.53, pitch: 3.603, roll: 10.916 },
+    { index: 2, yaw: 1.056, pitch: 9.758, roll: 8.724 },
+    { index: 3, yaw: 1.574, pitch: 90.808, roll: 17.507 },
+    { index: 4, yaw: 7.08, pitch: 9.725, roll: 9.277 },
+    { index: 5, yaw: 2.569, pitch: 1.484, roll: 10.044 },
+    { index: 6, yaw: 6.038, pitch: 13.064, roll: 4.816 },
+    { index: 7, yaw: 3.484, pitch: 14.45, roll: 19.602 },
+    { index: 8, yaw: 8.902, pitch: 27.629, roll: 4.408 },
+    { index: 9, yaw: 0.289, pitch: 6.594, roll: 4.236 },
+    { index: 10, yaw: 4.642, pitch: 17.45, roll: 4.102 },
+    { index: 11, yaw: 4.964, pitch: 78.103, roll: 4.008 },
+    { index: 12, yaw: 5.256, pitch: 8.55, roll: 67.964 },
+];
