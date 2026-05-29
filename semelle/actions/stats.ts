@@ -62,9 +62,6 @@ function estimateDistanceFromSteps(steps: number): number {
     return Number((steps * ESTIMATED_DISTANCE_PER_STEP_METERS).toFixed(2));
 }
 
-
-    
-
 async function getSemelleStepTotal(
     semelleId: number,
     startSql: string,

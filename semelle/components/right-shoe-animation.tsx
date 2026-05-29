@@ -966,10 +966,10 @@ export const EXAMPLE_FRAMES: EulerFrame[] = [
     { index: 12, yaw: 5.256, pitch: 18.55, roll: 3.964 },
 ];
 
-export const EXAMPLE_FRAMES2 : EulerFrame[] = [
+export const EXAMPLE_FRAMES2: EulerFrame[] = [
     { index: 0, yaw: 0.0, pitch: 2.78, roll: 2.072 },
     { index: 1, yaw: 0.53, pitch: 3.603, roll: 10.916 },
-    { index: 2, yaw: 1.056, pitch: 9.758, roll: 8.724 },  
+    { index: 2, yaw: 1.056, pitch: 9.758, roll: 8.724 },
     { index: 3, yaw: 1.574, pitch: 90.808, roll: 17.507 },
     { index: 4, yaw: 7.08, pitch: 9.725, roll: 9.277 },
     { index: 5, yaw: 2.569, pitch: 1.484, roll: 10.044 },
@@ -980,7 +980,6 @@ export const EXAMPLE_FRAMES2 : EulerFrame[] = [
     { index: 10, yaw: 4.642, pitch: 17.45, roll: 4.102 },
     { index: 11, yaw: 4.964, pitch: 78.103, roll: 4.008 },
     { index: 12, yaw: 5.256, pitch: 8.55, roll: 67.964 },
-
 ];
 
 export default function RightShoeAnimation() {
