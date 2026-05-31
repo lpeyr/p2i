@@ -98,7 +98,9 @@ class AppliProd:
             return
         while self.buffer:
             trame = self.buffer.popleft()  # FIFO : on prend le plus ancien
-            self.ajouter_mesure_gps(trame, idSession)  # ta méthode d'insertion
+            self.ajouter_mesure_flexi(trame, idSession)
+            self.ajouter_mesure_gps(trame, idSession)
+            self.ajouter_mesure_accel(trame, idSession)
 
     def ajouter_mesure_gps(self, trame, idSession):
         if trame.get("gps") is None:
@@ -121,6 +123,9 @@ class AppliProd:
             print(f"MySQL [ERREUR] : {e}")
 
     def ajouter_mesure_flexi(self, trame, idSession):
+        if not all(k in trame for k in ("flexi1", "flexi2", "flexi3")):
+            print("[BD] Trame sans flexi, insertion ignorée.")
+            return
         for i in range(len(trame["flexi1"])):
             try:
                 self.cursor.execute(
@@ -140,6 +145,9 @@ class AppliProd:
                 print(f"MySQL [ERREUR] : {e}")
 
     def ajouter_mesure_accel(self, trame, idSession):
+        if "accel" not in trame:
+            print("[BD] Trame sans accélération, insertion ignorée.")
+            return
         for i in range(len(trame["accel"])):
             try:
                 self.cursor.execute(

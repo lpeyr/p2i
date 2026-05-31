@@ -1,12 +1,12 @@
 import json
-import serial
-from datetime import datetime
-from time import sleep
 import mysql.connector as mysql
-from serial.tools import list_ports
-from dotenv import load_dotenv
 import os
+import serial
+from datetime import datetime, timedelta
+from dotenv import load_dotenv
 from pathlib import Path
+from serial.tools import list_ports
+from time import sleep
 
 
 class AppliProd:
@@ -44,6 +44,8 @@ class AppliProd:
         trame = [dict_flexi, dict_gps, dict_accel]
         """
         try:
+            if self.connexion_bd_commune is None:
+                self.connexion_bd()
             cursor = self.connexion_bd_commune.cursor()
 
             dict_flexi, dict_gps, dict_accel = trame
@@ -53,7 +55,7 @@ class AppliProd:
                 "INSERT INTO MesureFlexi (time,flexi1,flexi2,flexi3,idSession,idSemelle) VALUES (%s,%s,%s,%s,%s,%s)",
                 [
                     (
-                        dict_flexi.get("timestamp"),
+                        self._timestamp_to_datetime(dict_flexi.get("timestamp")),
                         dict_flexi.get("flexi1"),
                         dict_flexi.get("flexi2"),
                         dict_flexi.get("flexi3"),
@@ -68,7 +70,7 @@ class AppliProd:
                 "INSERT INTO MesureGPS (time,lattitude,longitude,idSession,idSemelle) VALUES (%s,%s,%s,%s,%s)",
                 [
                     (
-                        dict_gps.get("timestamp"),
+                        self._timestamp_to_datetime(dict_gps.get("timestamp")),
                         dict_gps.get("lat"),
                         dict_gps.get("lon"),
                         idSession,
@@ -82,7 +84,7 @@ class AppliProd:
                 "INSERT INTO MesureAccel (time,accel,idSession,idSemelle) VALUES (%s,%s,%s,%s)",
                 [
                     (
-                        dict_accel.get("timestamp"),
+                        self._timestamp_to_datetime(dict_accel.get("timestamp")),
                         json.dumps(dict_accel.get("accel")),
                         idSession,
                         idSemelle,
@@ -106,7 +108,7 @@ class AppliProd:
                 WHERE Semelle.side = %s
                 AND Session.dateFin IS NULL;
                 """,
-                (side),
+                (side,),
             )
             rows = self.cursor.fetchall()
 
@@ -166,15 +168,24 @@ class AppliProd:
                 return port.device
         return None
 
+    def timestamp_to_datetime(self, timestamp_value):
+        """Convertit un timestamp Unix en datetime compatible MariaDB TIMESTAMP."""
+        try:
+            return datetime.utcfromtimestamp(float(timestamp_value))
+        except (TypeError, ValueError, OSError) as e:
+            raise ValueError(f"Timestamp invalide: {timestamp_value}") from e
+
     def add_angle_to_db(self, data, idSession, idSemelle):
         try:
-            self.connexion_bd()
+            if self.connexion_bd_commune is None:
+                self.connexion_bd()
             cursor = self.connexion_bd_commune.cursor()
             for i in range(len(data.get("yaw"))):
                 cursor.execute(
-                    "INSERT INTO MesureAngle (time,yaw,pitch,roll,idSession,idSemelle) VALUES (%s,%s,%s,%s)",
+                    "INSERT INTO MesureAngle (time,yaw,pitch,roll,idSession,idSemelle) VALUES (%s,%s,%s,%s,%s,%s)",
                     (
-                        float(data.get("timestamp")) + i * 0.1,
+                        self._timestamp_to_datetime(data.get("timestamp"))
+                        + timedelta(seconds=i * 0.1),
                         data.get("yaw")[i],
                         data.get("pitch")[i],
                         data.get("roll")[i],
