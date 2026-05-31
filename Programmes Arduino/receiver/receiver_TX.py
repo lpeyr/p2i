@@ -14,10 +14,9 @@ class AppliProd:
     def __init__(self):
         self.connexion_bd_commune = None
         self.cursor = None
-        self.angles = {"yaw" : [], "pitch" : [], "roll" : []}
+        self.angles = {"yaw": [], "pitch": [], "roll": []}
         with open(".config/db_conn.json", "r") as f:
             self.db_config = json.load(f)
-        
 
     def connexion_bd(self):
         print("")
@@ -46,9 +45,9 @@ class AppliProd:
         """
         try:
             cursor = self.connexion_bd_commune.cursor()
-            
+
             dict_flexi, dict_gps, dict_accel = trame
-            
+
             # Insertion des mesures Flexi
             cursor.executemany(
                 "INSERT INTO MesureFlexi (time,flexi1,flexi2,flexi3,idSession,idSemelle) VALUES (%s,%s,%s,%s,%s,%s)",
@@ -63,7 +62,7 @@ class AppliProd:
                     )
                 ],
             )
-            
+
             # Insertion des mesures GPS
             cursor.executemany(
                 "INSERT INTO MesureGPS (time,lattitude,longitude,idSession,idSemelle) VALUES (%s,%s,%s,%s,%s)",
@@ -77,7 +76,7 @@ class AppliProd:
                     )
                 ],
             )
-            
+
             # Insertion des mesures IMU
             cursor.executemany(
                 "INSERT INTO MesureAccel (time,accel,idSession,idSemelle) VALUES (%s,%s,%s,%s)",
@@ -90,7 +89,7 @@ class AppliProd:
                     )
                 ],
             )
-            
+
             self.connexion_bd_commune.commit()
             print("✓ Trame insérée avec succès")
         except Exception as e:
@@ -106,7 +105,8 @@ class AppliProd:
                 JOIN Semelle ON (Semelle.idSemelle = Session.semelle1 OR Semelle.idSemelle = Session.semelle2)
                 WHERE Semelle.side = %s
                 AND Session.dateFin IS NULL;
-                """, (side)
+                """,
+                (side),
             )
             rows = self.cursor.fetchall()
 
@@ -115,7 +115,9 @@ class AppliProd:
                 return None, None
             else:
                 print("Plusieurs sessions actives détectées")
-            idSession, idSemelle = rows[0] # On prend la première session active trouvée (si plusieurs, c'est un problème de gestion des sessions)
+            idSession, idSemelle = rows[
+                0
+            ]  # On prend la première session active trouvée (si plusieurs, c'est un problème de gestion des sessions)
             return idSession, idSemelle
 
         except Exception as e:
@@ -123,9 +125,9 @@ class AppliProd:
             return None, None
 
     def recuperer_fichier_txt_serial(self, port=None, baudrate=9600, timeout=5):
-        
+
         try:
-            
+
             # Crée la connexion Serial
             ser = serial.Serial(
                 port=self.find_arduino_port() if port is None else port,
@@ -135,23 +137,23 @@ class AppliProd:
                 stopbits=serial.STOPBITS_ONE,
                 timeout=timeout,
             )
-            
+
             print(f"Connecté à {ser.name}")
-            
+
             # Récupère les données
             fichier_txt = ""
             start_time = datetime.now()
-            
+
             while (datetime.now() - start_time).total_seconds() < timeout:
                 if ser.in_waiting > 0:
-                    line = ser.readline().decode("utf-8", errors='ignore')
+                    line = ser.readline().decode("utf-8", errors="ignore")
                     fichier_txt += line
-            
+
             ser.close()
             print("Port série fermé")
-            
+
             return fichier_txt if fichier_txt else None
-            
+
         except Exception as e:
             print(f"Erreur lors de la lecture du port série: {e}")
             return None
@@ -164,8 +166,6 @@ class AppliProd:
                 return port.device
         return None
 
-
-    
     def add_angle_to_db(self, data, idSession, idSemelle):
         try:
             self.connexion_bd()
@@ -203,4 +203,3 @@ while appli.find_arduino_port():
         print("Données sauvegardées dans la base de données")
     else:
         print("Aucune donnée reçue dans le délai imparti.")
-    
