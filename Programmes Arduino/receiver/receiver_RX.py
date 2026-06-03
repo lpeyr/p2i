@@ -1,8 +1,9 @@
 import json
-import mysql.connector as mysql
-import serial
 from collections import deque
 from datetime import datetime, timedelta
+
+import mysql.connector as mysql
+import serial
 from serial.tools import list_ports
 
 
@@ -62,9 +63,20 @@ class AppliProd:
             return None, None
 
     def timestamp_to_datetime(self, timestamp_value):
-        """Convertit un timestamp Unix en datetime compatible MariaDB TIMESTAMP."""
+        """Convertit un timestamp relatif (secondes) en datetime d'émission.
+        Utilise le moment présent comme référence : datetime.now() - timestamp.
+        Accepte la virgule décimale et les millisecondes. Renvoie datetime sans microsecondes.
+        """
         try:
-            return datetime.utcfromtimestamp(float(timestamp_value))
+            s = str(timestamp_value).strip()
+            s = s.replace(",", ".")
+            ts = float(s)
+            # si le timestamp semble être en millisecondes, le convertir en secondes
+            if ts > 1e12:
+                ts = ts / 1000.0
+            # interpréter le timestamp comme un offset en secondes depuis le début → maintenant - offset
+            dt = datetime.now() - timedelta(seconds=ts)
+            return dt.replace(microsecond=0)
         except (TypeError, ValueError, OSError) as e:
             raise ValueError(f"Timestamp invalide: {timestamp_value}") from e
 
@@ -111,7 +123,7 @@ class AppliProd:
             self.cursor.execute(
                 "INSERT INTO MesureGPS (time, lattitude, longitude, idSession, idSemelle) VALUES (%s, %s, %s, %s, %s)",
                 (
-                    self._timestamp_to_datetime(trame["timestamp"]),
+                    self.timestamp_to_datetime(trame["timestamp"]),
                     gps["lat"],
                     gps["lon"],
                     idSession,
@@ -123,16 +135,24 @@ class AppliProd:
             print(f"MySQL [ERREUR] : {e}")
 
     def ajouter_mesure_flexi(self, trame, idSession):
+        print(trame)
         if not all(k in trame for k in ("flexi1", "flexi2", "flexi3")):
             print("[BD] Trame sans flexi, insertion ignorée.")
             return
+        # base de temps
+        try:
+            base_dt = self.timestamp_to_datetime(trame["timestamp"])
+        except ValueError as e:
+            print(f"MySQL [ERREUR] : {e}")
+            return
         for i in range(len(trame["flexi1"])):
             try:
+                # ajouter un décalage en demi-secondes, puis tronquer les microsecondes
+                new_dt = (base_dt + timedelta(seconds=i * 0.5)).replace(microsecond=0)
                 self.cursor.execute(
                     "INSERT INTO MesureFlexi (time, flexi1, flexi2, flexi3, idSession, idSemelle) VALUES (%s, %s, %s, %s, %s, %s)",
                     (
-                        self._timestamp_to_datetime(trame["timestamp"])
-                        + timedelta(seconds=i * 0.5),
+                        new_dt,
                         trame["flexi1"][i],
                         trame["flexi2"][i],
                         trame["flexi3"][i],
@@ -148,13 +168,18 @@ class AppliProd:
         if "accel" not in trame:
             print("[BD] Trame sans accélération, insertion ignorée.")
             return
+        try:
+            base_dt = self.timestamp_to_datetime(trame["timestamp"])
+        except ValueError as e:
+            print(f"MySQL [ERREUR] : {e}")
+            return
         for i in range(len(trame["accel"])):
             try:
+                new_dt = (base_dt + timedelta(seconds=i)).replace(microsecond=0)
                 self.cursor.execute(
                     "INSERT INTO MesureAccel (time, accel, idSession, idSemelle) VALUES (%s, %s, %s, %s)",
                     (
-                        self._timestamp_to_datetime(trame["timestamp"])
-                        + timedelta(seconds=i),
+                        new_dt,
                         trame["accel"][i],
                         idSession,
                         trame["id"],
@@ -173,12 +198,12 @@ class AppliProd:
             return
 
         with serial.Serial(
-            port=port,
-            baudrate=9600,
-            bytesize=serial.EIGHTBITS,
-            parity=serial.PARITY_NONE,
-            stopbits=serial.STOPBITS_ONE,
-            timeout=1,
+                port=port,
+                baudrate=9600,
+                bytesize=serial.EIGHTBITS,
+                parity=serial.PARITY_NONE,
+                stopbits=serial.STOPBITS_ONE,
+                timeout=1,
         ) as ser:
             print(f"Connecté à {ser.name} — en écoute...\n")
 
