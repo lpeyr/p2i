@@ -1,8 +1,9 @@
 import json
-import serial
 import mysql.connector as mysql
-from serial.tools import list_ports
+import serial
 from collections import deque
+from datetime import datetime, timedelta
+from serial.tools import list_ports
 
 
 class AppliProd:
@@ -52,15 +53,21 @@ class AppliProd:
             if len(rows) == 0:
                 print("Pas de session active")
                 return None, None
-            else:
+            elif len(rows) > 1:
                 print("Plusieurs sessions actives détectées")
-            idSession = rows[0] # On prend la première session active trouvée (si plusieurs, c'est un problème de gestion des sessions)
-            return idSession
+            idSession = rows[0][0]  # On prend la première session active trouvée
+            return idSession, None
         except Exception as e:
             print(f"Erreur  : {e}")
-            return None
+            return None, None
 
-    # ─── Lire une trame depuis le Serial et l'ajouter au buffer ───────────────
+    def timestamp_to_datetime(self, timestamp_value):
+        """Convertit un timestamp Unix en datetime compatible MariaDB TIMESTAMP."""
+        try:
+            return datetime.utcfromtimestamp(float(timestamp_value))
+        except (TypeError, ValueError, OSError) as e:
+            raise ValueError(f"Timestamp invalide: {timestamp_value}") from e
+
     def lire_serial(self, ser):
         """
         Appelé à chaque itération de la boucle principale.
@@ -69,11 +76,13 @@ class AppliProd:
         if ser.in_waiting > 0:
             ligne = ser.readline().decode("utf-8", errors="ignore").strip()
 
-            if ligne.startswith("{"):   # c'est une trame JSON
+            if ligne.startswith("{"):  # c'est une trame JSON
                 try:
                     trame = json.loads(ligne)
                     self.buffer.append(trame)
-                    print(f"[BUFFER +1] taille={len(self.buffer)} | id={trame.get('id')}")
+                    print(
+                        f"[BUFFER +1] taille={len(self.buffer)} | id={trame.get('id')}"
+                    )
                 except json.JSONDecodeError:
                     print(f"[JSON ERREUR] ligne ignorée : {ligne}")
             else:
@@ -84,15 +93,15 @@ class AppliProd:
         Dépile les trames du buffer FIFO et les insère en BD.
         À compléter avec ta logique d'insertion.
         """
-        idSession = self.find_idSession()
+        idSession, _ = self.find_idSession()
+        if idSession is None:
+            return
         while self.buffer:
-            trame = self.buffer.popleft()   # FIFO : on prend le plus ancien
-            print(trame)
-            self.ajouter_mesure_gps(trame, idSession)       # ta méthode d'insertion
-            self.ajouter_mesure_accel(trame, idSession)
+            trame = self.buffer.popleft()  # FIFO : on prend le plus ancien
             self.ajouter_mesure_flexi(trame, idSession)
+            self.ajouter_mesure_gps(trame, idSession)
+            self.ajouter_mesure_accel(trame, idSession)
 
-    # ─── Insertion BD (à compléter par toi) ───────────────────────────────────
     def ajouter_mesure_gps(self, trame, idSession):
         if trame.get("gps") is None:
             print("[BD] Trame sans GPS, insertion ignorée.")
@@ -101,36 +110,60 @@ class AppliProd:
         try:
             self.cursor.execute(
                 "INSERT INTO MesureGPS (time, lattitude, longitude, idSession, idSemelle) VALUES (%s, %s, %s, %s, %s)",
-                (trame["timestamp"], gps[0], gps[1], idSession, trame["id"])
+                (
+                    self._timestamp_to_datetime(trame["timestamp"]),
+                    gps["lat"],
+                    gps["lon"],
+                    idSession,
+                    trame["id"],
+                ),
             )
             self.connexion_bd_commune.commit()
         except Exception as e:
             print(f"MySQL [ERREUR] : {e}")
-    
+
     def ajouter_mesure_flexi(self, trame, idSession):
+        if not all(k in trame for k in ("flexi1", "flexi2", "flexi3")):
+            print("[BD] Trame sans flexi, insertion ignorée.")
+            return
         for i in range(len(trame["flexi1"])):
             try:
                 self.cursor.execute(
                     "INSERT INTO MesureFlexi (time, flexi1, flexi2, flexi3, idSession, idSemelle) VALUES (%s, %s, %s, %s, %s, %s)",
-                    (float(trame["timestamp"]) + i*0.5, trame["flexi1"][i], trame["flexi2"][i], trame["flexi3"][i], idSession, trame["id"])
+                    (
+                        self._timestamp_to_datetime(trame["timestamp"])
+                        + timedelta(seconds=i * 0.5),
+                        trame["flexi1"][i],
+                        trame["flexi2"][i],
+                        trame["flexi3"][i],
+                        idSession,
+                        trame["id"],
+                    ),
                 )
                 self.connexion_bd_commune.commit()
             except Exception as e:
                 print(f"MySQL [ERREUR] : {e}")
-    
+
     def ajouter_mesure_accel(self, trame, idSession):
+        if "accel" not in trame:
+            print("[BD] Trame sans accélération, insertion ignorée.")
+            return
         for i in range(len(trame["accel"])):
             try:
                 self.cursor.execute(
-                    "INSERT INTO MesureAccel (time, accel, idSession, idSemelle) VALUES (%s, %s, %s, %s, %s, %s)",
-                    (int(trame["timestamp"]) + i, trame["accel"][i][0], trame["accel"][i][1], trame["accel"][i][2], idSession, trame["id"])
+                    "INSERT INTO MesureAccel (time, accel, idSession, idSemelle) VALUES (%s, %s, %s, %s)",
+                    (
+                        self._timestamp_to_datetime(trame["timestamp"])
+                        + timedelta(seconds=i),
+                        trame["accel"][i],
+                        idSession,
+                        trame["id"],
+                    ),
                 )
                 self.connexion_bd_commune.commit()
             except Exception as e:
                 print(f"MySQL [ERREUR] : {e}")
-    
-    
-        
+
     def run(self):
         self.connexion_bd()
 
@@ -158,7 +191,6 @@ class AppliProd:
                     self.vider_buffer()
 
 
-# ─── Lancement ────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
     app = AppliProd()
     app.run()

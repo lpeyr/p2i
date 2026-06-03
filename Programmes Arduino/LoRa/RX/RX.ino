@@ -90,12 +90,7 @@ void setup() {
   Serial.begin(9600);
   while (!Serial);
 
-  Serial.println("=== RX ===");
-  Serial.print("Taille trame avec GPS : "); Serial.print(sizeof(Trame_complet)); Serial.println(" octets");
-  Serial.print("Taille trame sans GPS : "); Serial.print(sizeof(Trame_sansGPS)); Serial.println(" octets");
-
   if (!LoRa.begin(FREQUENCY)) {
-    Serial.println("ERREUR LoRa !");
     while (true);
   }
 
@@ -104,7 +99,6 @@ void setup() {
   LoRa.setSignalBandwidth(BW);
   LoRa.setCodingRate4(CR);
 
-  Serial.println("LoRa OK, en écoute...");
 }
 
 // ─── Loop ─────────────────────────────────────────────────────────────────────

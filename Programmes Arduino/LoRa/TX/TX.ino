@@ -167,7 +167,7 @@ void imuValAngle() {
 
 void remplir_trame() {
   memset(&trame, 0, sizeof(trame));
-  trame.identifiant  = 1;
+  trame.identifiant  = 0;
   nbr_imu_acc_actuel = 0;
   nb_mesure_actuel   = 0;
 
