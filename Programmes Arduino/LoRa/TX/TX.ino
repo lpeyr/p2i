@@ -17,11 +17,12 @@
 #define CR            5
 #define POWER         10
 #define FLEXI1        A0
-#define FLEXI2        A1
-#define FLEXI3        A2
+#define FLEXI2        A3
+#define FLEXI3        A6
 #define SEUIL         850
 #define NB_MAX_ANGLE  1500
 #define SIDE          "right"
+#define TRAME_DEB_MESURE_ANGLE 5
 
 
 typedef struct __attribute__((packed)) {
@@ -44,7 +45,6 @@ MagData magData;
 calData calib = {0};
 SF fusion;
 TinyGPSPlus gps;
-
 
 // --- Vars globales ---
 int           compteur           = 0;
@@ -83,9 +83,9 @@ uint32_t gpsToTimestamp(TinyGPSDate &d, TinyGPSTime &t) {
 
 // ─── Flex ────────────────────────────────────────────────────────────────────
 void flexi_val() {
-  bool val1 = analogRead(FLEXI1) < SEUIL;
-  bool val2 = analogRead(FLEXI2) < SEUIL;
-  bool val3 = analogRead(FLEXI3) < SEUIL;
+  bool val1 = analogRead(FLEXI1) > SEUIL;
+  bool val2 = analogRead(FLEXI2) > SEUIL;
+  bool val3 = analogRead(FLEXI3) > SEUIL;
   setBit(trame.bits_f1, nb_mesure_actuel, val1);
   setBit(trame.bits_f2, nb_mesure_actuel, val2);
   setBit(trame.bits_f3, nb_mesure_actuel, val3);
@@ -167,7 +167,7 @@ void imuValAngle() {
 
 void remplir_trame() {
   memset(&trame, 0, sizeof(trame));
-  trame.identifiant  = 0;
+  trame.identifiant  = 1;
   nbr_imu_acc_actuel = 0;
   nb_mesure_actuel   = 0;
 
@@ -193,8 +193,8 @@ void remplir_trame() {
       t_last_accel = maintenant;
     }
 
-    // Angles toutes les 100ms — après 5min (compteur>=15), jusqu'à NB_MAX_ANGLE
-    if (compteur >= 15 && nbr_imu_agl_actuel < NB_MAX_ANGLE) {
+    // Angles toutes les 100ms — après TRAME_DEB_MESURE_ANGLE x 20 sec (compteur>=TRAME_DEB_MESURE_ANGLE), jusqu'à NB_MAX_ANGLE
+    if (compteur >= TRAME_DEB_MESURE_ANGLE && nbr_imu_agl_actuel < NB_MAX_ANGLE) {
       if (maintenant - t_last_angle >= 100) {
         imuValAngle();
         t_last_angle = maintenant;
@@ -263,6 +263,7 @@ void loop() {
 
   if (maintenant - t_dernier_envoi >= DELTA_SEND_MS) {
     envoyerTrame();
+    Serial.println("Message envoyé");
     t_dernier_envoi = maintenant;
   }
 

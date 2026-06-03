@@ -227,8 +227,8 @@ void remplir_trame() {
       t_last_accel = maintenant;
     }
 
-    // Angles toutes les 100ms — après 5min (compteur>=15), jusqu'à NB_MAX_ANGLE
-    if (compteur >= 15 && nbr_imu_agl_actuel < NB_MAX_ANGLE) {
+    // Angles toutes les 100ms — après 5min (compteur>=5), jusqu'à NB_MAX_ANGLE
+    if (compteur >= 5 && nbr_imu_agl_actuel < NB_MAX_ANGLE) {
       if (maintenant - t_last_angle >= 100) {
         imuValAngle();
         t_last_angle = maintenant;
