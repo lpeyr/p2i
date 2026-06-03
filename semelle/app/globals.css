@@ -2,7 +2,7 @@
 @import "@heroui/styles";
 
 @theme inline {
-    --font-sans: "Segoe UI", "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+    --font-sans: var(--font-inter), "Segoe UI", "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
     --animate-pulse: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 

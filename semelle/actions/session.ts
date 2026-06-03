@@ -147,7 +147,6 @@ export async function startSession(semelle1: number, semelle2: number) {
 }
 
 export async function stopSession(idSession: number) {
-    console.log(idSession);
     await query("UPDATE Session SET dateFin = NOW() WHERE idSession = ?", [idSession]);
 }
 
