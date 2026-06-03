@@ -87,7 +87,10 @@ class AppliProd:
         idSession = self.find_idSession()
         while self.buffer:
             trame = self.buffer.popleft()   # FIFO : on prend le plus ancien
+            print(trame)
             self.ajouter_mesure_gps(trame, idSession)       # ta méthode d'insertion
+            self.ajouter_mesure_accel(trame, idSession)
+            self.ajouter_mesure_flexi(trame, idSession)
 
     # ─── Insertion BD (à compléter par toi) ───────────────────────────────────
     def ajouter_mesure_gps(self, trame, idSession):
