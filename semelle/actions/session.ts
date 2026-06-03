@@ -25,6 +25,24 @@ export async function getSession(id: number): Promise<Session> {
     return (await query<Session[]>("SELECT * FROM Session WHERE idSession = ?", [id]))[0];
 }
 
+export async function getSessionUIState(): Promise<{
+    hasActiveSession: boolean;
+    activeSessionId: number | null;
+    lastSessionId: number | null;
+}> {
+    // active session (dateFin IS NULL)
+    const activeRows = await query<Array<{ idSession: number }>>(
+        `SELECT idSession FROM Session WHERE dateFin IS NULL ORDER BY dateDebut DESC LIMIT 1`,
+    );
+    const lastRows = await query<Array<{ idSession: number }>>(
+        `SELECT idSession FROM Session ORDER BY dateDebut DESC LIMIT 1`,
+    );
+    const hasActiveSession = (activeRows && activeRows.length > 0) || false;
+    const activeSessionId = hasActiveSession ? Number(activeRows[0].idSession) : null;
+    const lastSessionId = lastRows && lastRows.length > 0 ? Number(lastRows[0].idSession) : null;
+    return { hasActiveSession, activeSessionId, lastSessionId };
+}
+
 export interface SessionOverview {
     idSession: number;
     dateDebut: string; // ISO
@@ -119,6 +137,18 @@ async function getSessionStatsImpl(sessionId: number): Promise<SessionStatsBySem
         semelle1: await getSemelleStats(session.semelle1),
         semelle2: await getSemelleStats(session.semelle2),
     };
+}
+
+export async function startSession(semelle1: number, semelle2: number) {
+    await query(
+        "INSERT INTO Session (dateDebut, semelle1, semelle2, step) VALUES (NOW(), ?, ?, 0)",
+        [semelle1, semelle2],
+    );
+}
+
+export async function stopSession(idSession: number) {
+    console.log(idSession);
+    await query("UPDATE Session SET dateFin = NOW() WHERE idSession = ?", [idSession]);
 }
 
 export default getSessionStatsImpl;
