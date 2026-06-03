@@ -13,6 +13,7 @@ class AppliProd:
         self.connexion_bd_commune = None
         self.cursor = None
         self.buffer = deque()  # FIFO avec deque
+        self.last_flexi_state = {}  # stocke dernier état connu par idSemelle: {id: {'flexi1':0,'flexi3':0}}
         with open(".config/db_conn.json", "r") as f:
             self.db_config = json.load(f)
 
@@ -135,7 +136,11 @@ class AppliProd:
             print(f"MySQL [ERREUR] : {e}")
 
     def ajouter_mesure_flexi(self, trame, idSession):
-        print(trame)
+        """Insère les mesures flexi et compte les pas à partir des listes de 0/1.
+        Comptage : chaque transition 0↔1 sur flexi1 OU flexi3 est un pas. On compte toutes
+        les transitions à l'intérieur de la liste, et on compare le premier élément au dernier
+        état connu pour compter la transition entre trames.
+        """
         if not all(k in trame for k in ("flexi1", "flexi2", "flexi3")):
             print("[BD] Trame sans flexi, insertion ignorée.")
             return
@@ -145,20 +150,68 @@ class AppliProd:
         except ValueError as e:
             print(f"MySQL [ERREUR] : {e}")
             return
-        for i in range(len(trame["flexi1"])):
-            try:
-                # ajouter un décalage en demi-secondes, puis tronquer les microsecondes
+        idSemelle = trame.get("id")
+        # normaliser les séquences en ints et même longueur
+        seq1 = [int(x) if x is not None else 0 for x in trame.get("flexi1", [])]
+        seq2 = [int(x) if x is not None else 0 for x in trame.get("flexi2", [])]
+        seq3 = [int(x) if x is not None else 0 for x in trame.get("flexi3", [])]
+        n = min(len(seq1), len(seq2), len(seq3))
+
+        steps_added = 0
+        stored_last = self.last_flexi_state.get(idSemelle)
+        stored_last_f1 = stored_last["flexi1"] if stored_last else None
+        stored_last_f3 = stored_last["flexi3"] if stored_last else None
+
+        prev1_in_list = None
+        prev3_in_list = None
+
+        try:
+            for i in range(n):
+                f1 = seq1[i]
+                f2 = seq2[i]
+                f3 = seq3[i]
                 new_dt = (base_dt + timedelta(seconds=i * 0.5)).replace(microsecond=0)
+                # insérer
                 self.cursor.execute(
                     "INSERT INTO MesureFlexi (time, flexi1, flexi2, flexi3, idSession, idSemelle) VALUES (%s, %s, %s, %s, %s, %s)",
-                    (
-                        new_dt,
-                        trame["flexi1"][i],
-                        trame["flexi2"][i],
-                        trame["flexi3"][i],
-                        idSession,
-                        trame["id"],
-                    ),
+                    (new_dt, f1, f2, f3, idSession, idSemelle),
+                )
+                # compter transitions pour f1
+                if prev1_in_list is None:
+                    if stored_last_f1 is not None and f1 != stored_last_f1:
+                        steps_added += 1
+                else:
+                    if f1 != prev1_in_list:
+                        steps_added += 1
+                # compter transitions pour f3
+                if prev3_in_list is None:
+                    if stored_last_f3 is not None and f3 != stored_last_f3:
+                        steps_added += 1
+                else:
+                    if f3 != prev3_in_list:
+                        steps_added += 1
+                prev1_in_list = f1
+                prev3_in_list = f3
+            # valider toutes les insertions des échantillons
+            self.connexion_bd_commune.commit()
+        except Exception as e:
+            # rollback en cas d'erreur d'insertion
+            try:
+                self.connexion_bd_commune.rollback()
+            except Exception:
+                pass
+            print(f"MySQL [ERREUR] : {e}")
+
+        # sauvegarder dernier état (dernier élément de la liste si présent)
+        if idSemelle is not None and prev1_in_list is not None:
+            self.last_flexi_state[idSemelle] = {"flexi1": prev1_in_list, "flexi3": prev3_in_list}
+
+        # incrémenter le compteur de pas dans la table Session
+        if steps_added > 0:
+            try:
+                self.cursor.execute(
+                    "UPDATE Session SET steps = COALESCE(steps, 0) + %s WHERE idSession = %s",
+                    (steps_added, idSession),
                 )
                 self.connexion_bd_commune.commit()
             except Exception as e:
