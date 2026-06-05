@@ -17,7 +17,9 @@
 #define FLEXI1              A0
 #define FLEXI2              A3
 #define FLEXI3              A6
-#define SEUIL               700
+#define SEUIL1              550
+#define SEUIL2              400
+#define SEUIL3              600
 #define NB_MAX_ANGLE        1500
 #define SIDE                "right"
 
@@ -54,9 +56,9 @@ void setBit(uint8_t* tableau, int pos, bool valeur) {
 
 // ─── Flex ─────────────────────────────────────────────────────────────────────
 void flexi_val() {
-  bool val1 = analogRead(FLEXI1) > SEUIL;
-  bool val2 = analogRead(FLEXI2) > SEUIL;
-  bool val3 = analogRead(FLEXI3) > SEUIL;
+  bool val1 = analogRead(FLEXI1) > SEUIL1;
+  bool val2 = analogRead(FLEXI2) > SEUIL2;
+  bool val3 = analogRead(FLEXI3) > SEUIL3;
   setBit(trame.bits_f1, nb_mesure_actuel, val1);
   setBit(trame.bits_f2, nb_mesure_actuel, val2);
   setBit(trame.bits_f3, nb_mesure_actuel, val3);
