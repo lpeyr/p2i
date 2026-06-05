@@ -54,7 +54,6 @@ TinyGPSPlus   gps;
 
 // ─── SD ───────────────────────────────────────────────────────────────────────
 bool sd_ok   = false;
-bool sd_full = false;
 File sdFile;
 
 // ─── Vars globales ────────────────────────────────────────────────────────────
@@ -130,14 +129,13 @@ void imuUpdate() {
   IMU.getMag(&magData);
 
   float deltat = fusion.deltatUpdate();
-  if (deltat < 0.001f) return;
+  if (deltat < 0.001f || deltat > 1.0f) return;
 
   fusion.MadgwickUpdate(
-    gyroData.gyroX  * PI / 180.0f,
-    gyroData.gyroY  * PI / 180.0f,
-    gyroData.gyroZ  * PI / 180.0f,
+    gyroData.gyroX * PI / 180.0f,
+    gyroData.gyroY * PI / 180.0f,
+    gyroData.gyroZ * PI / 180.0f,
     accelData.accelX, accelData.accelY, accelData.accelZ,
-    magData.magX,     magData.magY,     magData.magZ,
     deltat
   );
 }
@@ -171,25 +169,12 @@ void imuValAccel() {
 
 // ─── IMU — angles → SD (en degrés) ───────────────────────────────────────────
 void imuValAngle() {
-  if (!firstAngleTimestampSet) {
-    if (gps.date.isValid() && gps.time.isValid()) {
-
-      uint32_t offset = (timestamp_angle_fail > 0) ? (millis() - timestamp_angle_fail) / 1000 : 0;
-      timestamp_first_angle = gpsToTimestamp(gps.date, gps.time) - offset;
-      firstAngleTimestampSet = true;
-
-    } else if (timestamp_angle_fail == 0) {
-      timestamp_angle_fail = millis();
-    }
-  }
 
   float roll  = fusion.getRoll();
   float pitch = fusion.getPitch();
   float yaw   = fusion.getYaw();
 
-  if (isnan(roll) || isnan(pitch) || isnan(yaw)) return;
-
-   if (sd_ok && !sd_full && sdFile) {
+   if (sd_ok) {
     sdFile.print(millis());         sdFile.print(";");
     sdFile.print(yaw,   2);         sdFile.print(";");  // plus de String()
     sdFile.print(pitch, 2);         sdFile.print(";");
@@ -265,7 +250,7 @@ void remplir_trame() {
       t_last_accel = maintenant;
     }
 
-    if (compteur >= TRAME_DEB_MESURE_ANGLE && !sd_full) {
+    if (compteur >= TRAME_DEB_MESURE_ANGLE) {
       if (maintenant - t_last_angle >= ANGLE_DELAY_MS) {
         imuValAngle();
         t_last_angle = maintenant;
@@ -322,20 +307,10 @@ void envoyerTrame() {
   Serial.print("Statut       : "); Serial.println(ok ? "OK ✓" : "ECHEC ✗");
   Serial.print("SD           : ");
   if (!sd_ok)       Serial.println("non disponible");
-  else if (sd_full) Serial.println("PLEINE");
   else { Serial.print("OK — "); Serial.print(sdFile.size()); Serial.println(" octets ecrits"); }
 
   Serial.println("─────────────────────────────────────────");
   compteur++;
-}
-
-void clignote(int nb_fois, int duree_ms) {
-  for (int i = 0; i < nb_fois; i++) {
-    digitalWrite(LED_BUILTIN, HIGH);
-    delay(duree_ms);
-    digitalWrite(LED_BUILTIN, LOW);
-    delay(duree_ms);
-  }
 }
 
 void clignote(int nb_fois, int duree_ms) {
