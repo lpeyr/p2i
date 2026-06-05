@@ -6,11 +6,16 @@ interface GpsPoint {
     lon: number;
 }
 
+export interface Acceleration {
+    value: number;
+    timestamp: Date;
+}
+
 interface SemelleStats {
     flexi1: boolean[];
     flexi2: boolean[];
     flexi3: boolean[];
-    accelerations: number[];
+    accelerations: Acceleration[];
     gps: GpsPoint[];
 }
 
@@ -106,8 +111,8 @@ async function getSessionStatsImpl(sessionId: number): Promise<SessionStatsBySem
             [sessionId, semelleId],
         );
 
-        const imuRows = await query<Array<{ accel: number }>>(
-            "SELECT accel FROM MesureAccel WHERE idSession = ? AND idSemelle = ? ORDER BY time, idMesureAccel",
+        const imuRows = await query<Array<{ accel: number; time: Date }>>(
+            "SELECT accel, time FROM MesureAccel WHERE idSession = ? AND idSemelle = ? ORDER BY time, idMesureAccel",
             [sessionId, semelleId],
         );
 
@@ -120,7 +125,10 @@ async function getSessionStatsImpl(sessionId: number): Promise<SessionStatsBySem
             flexi1: flexiRows.map((r) => r.flexi1 === true || r.flexi1 === 1),
             flexi2: flexiRows.map((r) => r.flexi2 === true || r.flexi2 === 1),
             flexi3: flexiRows.map((r) => r.flexi3 === true || r.flexi3 === 1),
-            accelerations: imuRows.map((r) => Number(r.accel)),
+            accelerations: imuRows.map((r) => ({
+                value: Number(r.accel),
+                timestamp: r.time,
+            })),
             gps: gpsRows
                 .filter(
                     (r) =>
