@@ -22,7 +22,6 @@ typedef struct __attribute__((packed)) {
 
 typedef struct __attribute__((packed)) {
   uint8_t  identifiant;
-  uint32_t timestamp;
   uint8_t  bits_f1[NB_FLEX_OCT];
   uint8_t  bits_f2[NB_FLEX_OCT];
   uint8_t  bits_f3[NB_FLEX_OCT];
@@ -69,7 +68,6 @@ void afficherTrame(Trame_complet& trame) {
 // ─── Affichage trame SANS GPS ─────────────────────────────────────────────────
 void afficherTrameSansGPS(Trame_sansGPS& trame) {
   Serial.print("{\"id\": ");         Serial.print(trame.identifiant);
-  Serial.print(", \"timestamp\": "); Serial.print(trame.timestamp);
 
   Serial.print(", \"flexi1\": ");    afficherListeBits(trame.bits_f1);
   Serial.print(", \"flexi2\": ");    afficherListeBits(trame.bits_f2);
