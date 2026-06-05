@@ -2,7 +2,7 @@
 
 import { Button, Card, CardHeader, Chip, Separator } from "@heroui/react";
 import { useState, useTransition } from "react";
-import { Pause, Play, Square } from "@gravity-ui/icons";
+import { Play, Square } from "@gravity-ui/icons";
 import dynamic from "next/dynamic";
 import {
     FootCard,
@@ -113,16 +113,7 @@ export default function ActivityClient({
                                 isDisabled={isActive || isPending}
                                 type="submit"
                             >
-                                {isActive ? (
-                                    <>
-                                        <Pause />
-                                        Pause
-                                    </>
-                                ) : (
-                                    <>
-                                        <Play /> Commencer
-                                    </>
-                                )}
+                                <Play /> Commencer
                             </Button>
                         </form>
 
