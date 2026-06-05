@@ -6,11 +6,16 @@ interface GpsPoint {
     lon: number;
 }
 
+export interface Acceleration {
+    value: number;
+    timestamp: Date;
+}
+
 interface SemelleStats {
     flexi1: boolean[];
     flexi2: boolean[];
     flexi3: boolean[];
-    accelerations: number[];
+    accelerations: Acceleration[];
     gps: GpsPoint[];
 }
 
@@ -23,6 +28,24 @@ type FlexiRow = { flexi1: boolean | 0 | 1; flexi2: boolean | 0 | 1; flexi3: bool
 
 export async function getSession(id: number): Promise<Session> {
     return (await query<Session[]>("SELECT * FROM Session WHERE idSession = ?", [id]))[0];
+}
+
+export async function getSessionUIState(): Promise<{
+    hasActiveSession: boolean;
+    activeSessionId: number | null;
+    lastSessionId: number | null;
+}> {
+    // active session (dateFin IS NULL)
+    const activeRows = await query<Array<{ idSession: number }>>(
+        `SELECT idSession FROM Session WHERE dateFin IS NULL ORDER BY dateDebut DESC LIMIT 1`,
+    );
+    const lastRows = await query<Array<{ idSession: number }>>(
+        `SELECT idSession FROM Session ORDER BY dateDebut DESC LIMIT 1`,
+    );
+    const hasActiveSession = (activeRows && activeRows.length > 0) || false;
+    const activeSessionId = hasActiveSession ? Number(activeRows[0].idSession) : null;
+    const lastSessionId = lastRows && lastRows.length > 0 ? Number(lastRows[0].idSession) : null;
+    return { hasActiveSession, activeSessionId, lastSessionId };
 }
 
 export interface SessionOverview {
@@ -88,8 +111,8 @@ async function getSessionStatsImpl(sessionId: number): Promise<SessionStatsBySem
             [sessionId, semelleId],
         );
 
-        const imuRows = await query<Array<{ accel: number }>>(
-            "SELECT accel FROM MesureAccel WHERE idSession = ? AND idSemelle = ? ORDER BY time, idMesureAccel",
+        const imuRows = await query<Array<{ accel: number; time: Date }>>(
+            "SELECT accel, time FROM MesureAccel WHERE idSession = ? AND idSemelle = ? ORDER BY time, idMesureAccel",
             [sessionId, semelleId],
         );
 
@@ -102,7 +125,10 @@ async function getSessionStatsImpl(sessionId: number): Promise<SessionStatsBySem
             flexi1: flexiRows.map((r) => r.flexi1 === true || r.flexi1 === 1),
             flexi2: flexiRows.map((r) => r.flexi2 === true || r.flexi2 === 1),
             flexi3: flexiRows.map((r) => r.flexi3 === true || r.flexi3 === 1),
-            accelerations: imuRows.map((r) => Number(r.accel)),
+            accelerations: imuRows.map((r) => ({
+                value: Number(r.accel),
+                timestamp: r.time,
+            })),
             gps: gpsRows
                 .filter(
                     (r) =>
@@ -119,6 +145,17 @@ async function getSessionStatsImpl(sessionId: number): Promise<SessionStatsBySem
         semelle1: await getSemelleStats(session.semelle1),
         semelle2: await getSemelleStats(session.semelle2),
     };
+}
+
+export async function startSession(semelle1: number, semelle2: number) {
+    await query(
+        "INSERT INTO Session (dateDebut, semelle1, semelle2, step) VALUES (NOW(), ?, ?, 0)",
+        [semelle1, semelle2],
+    );
+}
+
+export async function stopSession(idSession: number) {
+    await query("UPDATE Session SET dateFin = NOW() WHERE idSession = ?", [idSession]);
 }
 
 export default getSessionStatsImpl;

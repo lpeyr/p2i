@@ -6,7 +6,7 @@ import { useTheme } from "next-themes";
 import Link from "next/link";
 import { useSyncExternalStore } from "react";
 import type { AnimationFrame, Overview } from "@/actions/stats";
-import { EXAMPLE_FRAMES, EXAMPLE_FRAMES2, ShoeAnimation } from "@/components/right-shoe-animation";
+import { EXAMPLE_FRAMES, EXAMPLE_FRAMES2, ShoeAnimation } from "@/components/shoe-animation";
 
 const emptySubscribe = () => () => {};
 

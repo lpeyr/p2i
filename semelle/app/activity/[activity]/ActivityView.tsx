@@ -4,13 +4,15 @@ import { Card, CardHeader, Chip, Separator } from "@heroui/react";
 import dynamic from "next/dynamic";
 import {
     FootCard,
-    StatCard,
-    LEGEND_ITEMS,
-    getCircleClassName,
+    type FootContactValues,
     formatDuration,
     formatStartTime,
-    type FootContactValues,
+    getCircleClassName,
+    LEGEND_ITEMS,
+    StatCard,
 } from "../ActivityUtils";
+import { Acceleration } from "@/actions/session";
+import { AccelChart } from "@/components/accel-chart";
 
 const MapView = dynamic(() => import("@/components/map"), {
     ssr: false,
@@ -29,6 +31,10 @@ export interface ActivityViewProps {
     rightHasActivity: boolean;
     distanceMeters: number;
     speedKmh: number;
+    accelerations: {
+        left: Acceleration[];
+        right: Acceleration[];
+    };
 }
 
 function FootPressureVisualizer({
@@ -99,6 +105,7 @@ export default function ActivityView({
     rightHasActivity,
     distanceMeters,
     speedKmh,
+    accelerations,
 }: Readonly<ActivityViewProps>) {
     const leftActive = leftHasActivity || leftContacts.some((value) => value > 0);
     const rightActive = rightHasActivity || rightContacts.some((value) => value > 0);
@@ -204,6 +211,10 @@ export default function ActivityView({
                         </div>
                     </div>
                 </section>
+                <Card>
+                    <h2 className="text-2xl font-semibold">Accélérations</h2>
+                    <AccelChart data={{ acc1: accelerations.left, acc2: accelerations.right }} />
+                </Card>
             </div>
         </main>
     );

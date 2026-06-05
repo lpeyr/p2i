@@ -169,6 +169,15 @@ void imuValAccel() {
   }
 }
 
+void clignote(int nb_fois, int duree_ms) {
+  for (int i = 0; i < nb_fois; i++) {
+    digitalWrite(LED_BUILTIN, HIGH);
+    delay(duree_ms);
+    digitalWrite(LED_BUILTIN, LOW);
+    delay(duree_ms);
+  }
+}
+
 // ─── IMU — angles → SD ────────────────────────────────────────────────────────
 void imuValAngle() {
   if (!firstAngleTimestampSet) {
@@ -289,8 +298,8 @@ void setup() {
   Serial.begin(9600);
   Serial1.begin(9600);
   delay(3000);
-
-  Serial.println("=== TX GPS + SD Logger ===");
+  clignote(3, 1000);
+  Serial.println("=== TX ===");
   Serial.print("Taille trame : "); Serial.print(sizeof(Trame_complet)); Serial.println(" octets");
 
   Wire.begin();

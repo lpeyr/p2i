@@ -94,7 +94,7 @@ class AppliProd:
                     trame = json.loads(ligne)
                     self.buffer.append(trame)
                     print(
-                        f"[BUFFER +1] taille={len(self.buffer)} | id={trame.get('id')}"
+                        f"{datetime.now()} [BUFFER +1] taille={len(self.buffer)} | id={trame.get('id')}"
                     )
                 except json.JSONDecodeError:
                     print(f"[JSON ERREUR] ligne ignorée : {ligne}")
@@ -210,7 +210,7 @@ class AppliProd:
         if steps_added > 0:
             try:
                 self.cursor.execute(
-                    "UPDATE Session SET steps = COALESCE(steps, 0) + %s WHERE idSession = %s",
+                    "UPDATE Session SET step = COALESCE(step, 0) + %s WHERE idSession = %s",
                     (steps_added, idSession),
                 )
                 self.connexion_bd_commune.commit()

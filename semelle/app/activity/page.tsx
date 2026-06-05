@@ -1,210 +1,106 @@
-"use client";
+import getSessionStatsImpl, {
+    getAllSessions,
+    getSession,
+    getSessionUIState,
+    SessionOverview,
+    startSession,
+    stopSession,
+} from "@/actions/session";
+import { getSemellesFromUser } from "@/actions/user";
+import ActivityClient from "./ActivityClient";
 
-import { Button, Card, CardHeader, Chip, Separator } from "@heroui/react";
-import { useState } from "react";
-import { Pause, Play, Square } from "@gravity-ui/icons";
-import dynamic from "next/dynamic";
-import {
-    FootCard,
-    StatCard,
-    LEGEND_ITEMS,
-    getCircleClassName,
-    formatDuration,
-    formatStartTime,
-    type FootContactValues,
-} from "./ActivityUtils";
+export const dynamic = "force-dynamic";
+export default async function ActivityPage() {
+    // logic côté serveur : récupérer les sessions et l'état depuis la BD
+    const sessions: SessionOverview[] = await getAllSessions();
 
-const MapView = dynamic(() => import("./../../components/map"), {
-    ssr: false,
-});
+    const uiState = await getSessionUIState();
+    const canStart = !uiState.hasActiveSession;
+    const canStop = uiState.hasActiveSession;
 
-interface ActivityData {
-    steps: number;
-    duration: number;
-    startTime: Date;
-    leftFootContacts: FootContactValues;
-    rightFootContacts: FootContactValues;
-    speed: number;
-}
+    // last session id from DB
+    const lastSessionId = uiState.lastSessionId;
 
-export default function ActivityPage() {
-    const [isActive, setIsActive] = useState(false);
-    const [activityData, setActivityData] = useState<ActivityData>({
-        steps: 0,
-        duration: 0,
-        startTime: new Date(),
-        leftFootContacts: [0, 0, 0],
-        rightFootContacts: [0, 0, 0],
-        speed: 0,
-    });
+    // déterminer semelle1/2 pour création de session :
+    let semelle1: number | null = null;
+    let semelle2: number | null = null;
 
-    const route: [number, number][] = [[45.782562, 4.872407]];
+    if (lastSessionId) {
+        const full = await getSession(lastSessionId);
+        semelle1 = full?.semelle1 ?? null;
+        semelle2 = full?.semelle2 ?? null;
+    }
 
-    return (
-        <main className="min-h-screen p-8">
-            <div className="mx-auto max-w-7xl space-y-8">
-                {/* Header */}
-                <section className="flex items-center justify-between">
-                    <div className="space-y-2">
-                        <h1 className="text-4xl font-bold">Activité en Temps Réel</h1>
-                        <p className="text-lg">
-                            Suivez votre marche et analysez vos données en direct
-                        </p>
-                    </div>
-                </section>
+    if (!semelle1 || !semelle2) {
+        // fallback : récupérer les semelles de l'utilisateur 1
+        const sems = await getSemellesFromUser(1);
+        if (sems && sems.length >= 1) semelle1 = sems[0].idSemelle;
+        if (sems && sems.length >= 2) semelle2 = sems[1].idSemelle ?? semelle1;
+    }
 
-                {/* Control Panel */}
-                <section className="space-y-4">
-                    <div className="flex gap-3">
-                        <Button
-                            className={`${isActive ? "bg-danger text-danger-foreground" : "bg-success text-success-foreground"}`}
-                            size="lg"
-                            onClick={() => setIsActive(!isActive)}
-                        >
-                            {isActive ? (
-                                <>
-                                    <Pause />
-                                    Pause
-                                </>
-                            ) : (
-                                <>
-                                    <Play /> Commencer
-                                </>
-                            )}
-                        </Button>
-                        <Button
-                            size="lg"
-                            onClick={() => {
-                                setIsActive(false);
-                                setActivityData({
-                                    steps: 0,
-                                    duration: 0,
-                                    startTime: new Date(),
-                                    leftFootContacts: [0, 0, 0],
-                                    rightFootContacts: [0, 0, 0],
-                                    speed: 0,
-                                });
-                            }}
-                        >
-                            <Square /> Arrêter
-                        </Button>
-                    </div>
-                </section>
+    // charger les dernières infos de flexiforce pour la session chargée
+    let initialActivityData = undefined;
+    if (lastSessionId) {
+        try {
+            const stats = await getSessionStatsImpl(lastSessionId);
+            const left = stats.semelle1;
+            const right = stats.semelle2;
+            // compter les appuis par zone (nombre de true dans chaque index)
+            const leftCounts = [0, 0, 0];
+            const rightCounts = [0, 0, 0];
+            for (let i = 0; i < Math.min(left.flexi1.length, 1000000); i++) {
+                leftCounts[0] += left.flexi1[i] ? 1 : 0;
+                leftCounts[1] += left.flexi2[i] ? 1 : 0;
+                leftCounts[2] += left.flexi3[i] ? 1 : 0;
+            }
+            for (let i = 0; i < Math.min(right.flexi1.length, 1000000); i++) {
+                rightCounts[0] += right.flexi1[i] ? 1 : 0;
+                rightCounts[1] += right.flexi2[i] ? 1 : 0;
+                rightCounts[2] += right.flexi3[i] ? 1 : 0;
+            }
 
-                {/* Real-time Stats */}
-                <section className="space-y-4">
-                    <h2 className="text-2xl font-semibold">Statistiques en Temps Réel</h2>
-                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                        <StatCard
-                            label="Pas"
-                            value={activityData.steps.toString()}
-                            color="text-primary"
-                        />
-                        <StatCard
-                            label="Durée"
-                            value={formatDuration(activityData.duration)}
-                            color="text-secondary"
-                        />
-                        <StatCard
-                            label="Heure de départ"
-                            value={formatStartTime(activityData.startTime)}
-                            color="text-success"
-                        />
-                        <StatCard
-                            label="Vitesse Moyenne"
-                            value={activityData.speed.toFixed(1)}
-                            unit="km/h"
-                            color="text-warning"
-                        />
-                    </div>
-                </section>
+            // trouver les métadonnées dans sessions list
+            const sessionOverview = sessions.find((s) => s.idSession === lastSessionId);
 
-                {/* Main Content Grid */}
-                <section className="grid gap-6 lg:grid-cols-3">
-                    {/* GPS Tracker */}
-                    <div className="space-y-4 lg:col-span-2">
-                        <h2 className="text-2xl font-semibold">Tracé GPS</h2>
-                        <Card className="border-separator overflow-hidden border">
-                            <CardHeader className="flex flex-col gap-3">
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <p className="font-semibold">Itinéraire en direct</p>
-                                        <p className="text-sm">Visualisation de votre trajet</p>
-                                    </div>
-                                    <Chip
-                                        variant="soft"
-                                        color={isActive ? "success" : "default"}
-                                        size="sm"
-                                    >
-                                        {isActive ? "En cours..." : "Arrêté"}
-                                    </Chip>
-                                </div>
-                            </CardHeader>
-                            <Separator />
-                            <div className="">
-                                <MapView route={route} />
-                            </div>
-                        </Card>
-                    </div>
-
-                    {/* Foot Pressure Visualizer */}
-                    <div className="space-y-4">
-                        <h2 className="text-2xl font-semibold">Appuis flexiforce</h2>
-                        <FootPressureVisualizer
-                            leftContacts={activityData.leftFootContacts}
-                            rightContacts={activityData.rightFootContacts}
-                        />
-                    </div>
-                </section>
-            </div>
-        </main>
-    );
-}
-/* Composant pour visualiser les appuis flexiforce sur les pieds */
-function FootPressureVisualizer({
-    leftContacts,
-    rightContacts,
-}: Readonly<{ leftContacts: FootContactValues; rightContacts: FootContactValues }>) {
-    const allContacts = [...leftContacts, ...rightContacts];
-    const maxContacts = Math.max(...allContacts, 0);
+            initialActivityData = {
+                steps: sessionOverview?.step ?? 0,
+                duration: sessionOverview?.durationSeconds ?? 0,
+                startTime: sessionOverview?.dateDebut ?? new Date().toISOString(),
+                leftFootContacts: leftCounts as [number, number, number],
+                rightFootContacts: rightCounts as [number, number, number],
+                speed: 0,
+            };
+        } catch {
+            // ignore stats errors
+            initialActivityData = undefined;
+        }
+    }
 
     return (
-        <div className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-2">
-                <FootCard
-                    title="Pied gauche"
-                    src="/foot_l.png"
-                    contacts={leftContacts}
-                    maxContacts={maxContacts}
-                />
-                <FootCard
-                    title="Pied droit"
-                    src="/foot_r.png"
-                    contacts={rightContacts}
-                    maxContacts={maxContacts}
-                />
-            </div>
-
-            <Card className="border-separator border">
-                <div className="space-y-3 p-6">
-                    <div className="space-y-1">
-                        <p className="font-semibold">Légende</p>
-                        <p className="text-sm">
-                            Référence : la zone qui a reçu le plus d&apos;appuis = 100%
-                        </p>
-                    </div>
-                    <div>
-                        {LEGEND_ITEMS.map((item) => (
-                            <div key={item.label} className="flex items-center gap-2">
-                                <span
-                                    className={`inline-flex h-4 w-4 rounded-full ${getCircleClassName(item.percentage)}`}
-                                />
-                                <span>{item.label}</span>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </Card>
-        </div>
+        <ActivityClient
+            sessions={sessions}
+            canStart={canStart}
+            canStop={canStop}
+            lastSessionId={lastSessionId}
+            semelle1={semelle1}
+            semelle2={semelle2}
+            startAction={startAction}
+            stopAction={stopAction}
+        />
     );
+}
+// server actions pour démarrer / arrêter
+async function startAction(formData: FormData) {
+    "use server";
+    const s1 = Number(formData.get("semelle1"));
+    const s2 = Number(formData.get("semelle2"));
+    if (!s1 || !s2) return;
+    await startSession(s1, s2);
+}
+
+async function stopAction(formData: FormData) {
+    "use server";
+    const id = Number(formData.get("idSession"));
+    if (!id) return;
+    await stopSession(id);
 }

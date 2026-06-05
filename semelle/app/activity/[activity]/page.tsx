@@ -107,6 +107,10 @@ export default async function ReadOnlyActivityPage({
         rightHasActivity: rightContacts.some((value) => value > 0),
         distanceMeters,
         speedKmh,
+        accelerations: {
+            left: semelleStats.semelle1.accelerations,
+            right: semelleStats.semelle2.accelerations,
+        },
     };
 
     return <ActivityView {...props} />;
