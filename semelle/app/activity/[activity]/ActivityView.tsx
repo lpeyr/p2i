@@ -139,7 +139,7 @@ export default function ActivityView({
     ];
 
     return (
-        <main className="min-h-screen p-8">
+        <main className="mb-18 min-h-screen p-8">
             <div className="mx-auto max-w-7xl space-y-8">
                 <section className="flex items-start justify-between">
                     <div className="space-y-2">
