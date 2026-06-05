@@ -128,6 +128,15 @@ void imuValAccel() {
   }
 }
 
+void clignote(int nb_fois, int duree_ms) {
+  for (int i = 0; i < nb_fois; i++) {
+    digitalWrite(LED_BUILTIN, HIGH);
+    delay(duree_ms);
+    digitalWrite(LED_BUILTIN, LOW);
+    delay(duree_ms);
+  }
+}
+
 
 // ─── IMU — angles (stockage RAM uniquement) ───────────────────────────────────
 void imuValAngle() {
@@ -229,7 +238,7 @@ void setup() {
   Serial.begin(9600);
   Serial1.begin(9600);  // GPS
   delay(3000);
-
+  clignote(3, 1000);
   Serial.println("=== TX ===");
   Serial.print("Taille trame : "); Serial.print(sizeof(Trame_complet)); Serial.println(" octets");
 

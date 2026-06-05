@@ -307,11 +307,21 @@ void envoyerTrame() {
   compteur++;
 }
 
+void clignote(int nb_fois, int duree_ms) {
+  for (int i = 0; i < nb_fois; i++) {
+    digitalWrite(LED_BUILTIN, HIGH);
+    delay(duree_ms);
+    digitalWrite(LED_BUILTIN, LOW);
+    delay(duree_ms);
+  }
+}
+
 // ── Setup ─────────────────────────────────────────────────────────────────────
 void setup() {
   Serial.begin(9600);
   Serial1.begin(9600); // GPS
   delay(3000);
+  clignote(3, 1000);
 
   if (Serial) {
     Serial.println("=== TX GPS + SD Logger ===");
