@@ -1,3 +1,14 @@
+#include <Keyboard.h>
+#include <KeyboardLayout.h>
+#include <Keyboard_da_DK.h>
+#include <Keyboard_de_DE.h>
+#include <Keyboard_es_ES.h>
+#include <Keyboard_fr_FR.h>
+#include <Keyboard_hu_HU.h>
+#include <Keyboard_it_IT.h>
+#include <Keyboard_pt_PT.h>
+#include <Keyboard_sv_SE.h>
+
 #include <Arduino.h>
 #include <SPI.h>
 #include <LoRa.h>
@@ -20,11 +31,11 @@
 #define BW                     125e3
 #define CR                     5
 #define POWER                  10
-#define FLEXI1                 A0
-#define FLEXI2                 A3
+#define FLEXI1                 A3
+#define FLEXI2                 A0
 #define FLEXI3                 A6
-#define SEUIL                  850
-#define SIDE                   "right"
+#define SEUIL                  800
+#define SIDE                   "left"
 #define TRAME_DEB_MESURE_ANGLE 0
 #define SD_CS_PIN              4
 #define SD_FILE                "imu.txt"
@@ -359,9 +370,6 @@ void setup() {
     IMU.init(calib, IMU_ADDRESS);
     Serial.println(">>> IMU reconfigurée avec calibration !");
   #endif
-
-  // ← CLÉ : préchauffer Madgwick avant tout
-  imuWarmup();
 
   if (!LoRa.begin(FREQUENCY)) {
     Serial.println("ERREUR LoRa !");
