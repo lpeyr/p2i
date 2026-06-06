@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@heroui/react";
+import Link from "next/link";
 
 interface ErrorProps {
     error: Error & { digest?: string };
@@ -88,15 +89,11 @@ export default function Error({ error }: ErrorProps) {
 
                 {/* Actions */}
                 <div className="flex items-center gap-3">
-                    <Button
-                        as="a"
-                        href="/"
-                        variant="bordered"
-                        className="border-zinc-300 px-6 text-zinc-600 transition-colors hover:border-zinc-400 hover:text-zinc-900 dark:border-zinc-700 dark:text-zinc-300 dark:hover:border-zinc-500 dark:hover:text-white"
-                        radius="full"
-                    >
-                        Retour à l&apos;accueil
-                    </Button>
+                    <Link href="/">
+                        <Button className="border-zinc-300 px-6 text-zinc-600 transition-colors hover:border-zinc-400 hover:text-zinc-900 dark:border-zinc-700 dark:text-zinc-300 dark:hover:border-zinc-500 dark:hover:text-white">
+                            Retour à l&apos;accueil
+                        </Button>
+                    </Link>
                 </div>
 
                 {/* Footer hint */}

@@ -86,7 +86,6 @@ export default async function ActivityPage() {
             semelle2={semelle2}
             startAction={startAction}
             stopAction={stopAction}
-            initialActivityData={initialActivityData}
         />
     );
 }

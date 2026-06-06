@@ -4,6 +4,7 @@ import totalDistanceMeters from "@/lib/distance";
 interface GpsPoint {
     lat: number;
     lon: number;
+    alt: number;
 }
 
 export interface Acceleration {
@@ -181,7 +182,13 @@ export async function getElevations(points: Omit<GpsPoint, "alt">[]): Promise<Gp
         }
 
         const data = await response.json();
-        return data.results.map((p) => ({ lat: p.latitude, lon: p.longitude, alt: p.elevation }));
+        return data.results.map(
+            (p: { latitude: number; longitude: number; elevation: number }) => ({
+                lat: p.latitude,
+                lon: p.longitude,
+                alt: p.elevation,
+            }),
+        );
     } catch {
         return points.map((p) => ({ ...p, alt: 0 }));
     }

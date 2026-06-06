@@ -1,5 +1,5 @@
 "use client";
-import { Button, Chip, Separator, Tooltip } from "@heroui/react";
+import { Button, Chip, Separator } from "@heroui/react";
 import Link from "next/link";
 
 export default function NotFound() {
@@ -28,21 +28,15 @@ export default function NotFound() {
             {/* Actions */}
             <div className="flex flex-wrap items-center justify-center gap-3">
                 <Link href="/">
-                    <Button color="primary" radius="full" className="px-6 font-semibold">
-                        Retour à l&apos;accueil
-                    </Button>
+                    <Button className="px-6 font-semibold">Retour à l&apos;accueil</Button>
                 </Link>
 
-                <Tooltip content="Revenir à la page précédente" placement="bottom">
-                    <Button
-                        onClick={() => window.history.back()}
-                        variant="bordered"
-                        radius="full"
-                        className="border-zinc-300 px-6 text-zinc-600 dark:border-zinc-700 dark:text-zinc-300"
-                    >
-                        Page précédente
-                    </Button>
-                </Tooltip>
+                <Button
+                    onClick={() => window.history.back()}
+                    className="border-zinc-300 px-6 text-zinc-600 dark:border-zinc-700 dark:text-zinc-300"
+                >
+                    Page précédente
+                </Button>
             </div>
 
             {/* Separator + footer hint */}
