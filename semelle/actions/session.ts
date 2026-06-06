@@ -129,15 +129,17 @@ async function getSessionStatsImpl(sessionId: number): Promise<SessionStatsBySem
                 value: Number(r.accel),
                 timestamp: r.time,
             })),
-            gps: gpsRows
-                .filter(
-                    (r) =>
-                        r.lattitude !== null &&
-                        r.longitude !== null &&
-                        Number.isFinite(Number(r.lattitude)) &&
-                        Number.isFinite(Number(r.longitude)),
-                )
-                .map((r) => ({ lat: Number(r.lattitude), lon: Number(r.longitude) })),
+            gps: await getElevations(
+                gpsRows
+                    .filter(
+                        (r) =>
+                            r.lattitude !== null &&
+                            r.longitude !== null &&
+                            Number.isFinite(Number(r.lattitude)) &&
+                            Number.isFinite(Number(r.longitude)),
+                    )
+                    .map((r) => ({ lat: Number(r.lattitude), lon: Number(r.longitude) })),
+            ),
         };
     };
 
@@ -156,6 +158,33 @@ export async function startSession(semelle1: number, semelle2: number) {
 
 export async function stopSession(idSession: number) {
     await query("UPDATE Session SET dateFin = NOW() WHERE idSession = ?", [idSession]);
+}
+
+export async function getElevations(points: Omit<GpsPoint, "alt">[]): Promise<GpsPoint[]> {
+    try {
+        const response = await fetch("https://api.open-elevation.com/api/v1/lookup", {
+            method: "POST",
+            headers: {
+                Accept: "application/json",
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                locations: points.map((p) => ({
+                    latitude: p.lat,
+                    longitude: p.lon,
+                })),
+            }),
+        });
+
+        if (!response.ok) {
+            throw new Error(`Elevation API error: ${response.status} ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        return data.results.map((p) => ({ lat: p.latitude, lon: p.longitude, alt: p.elevation }));
+    } catch {
+        return points.map((p) => ({ ...p, alt: 0 }));
+    }
 }
 
 export default getSessionStatsImpl;

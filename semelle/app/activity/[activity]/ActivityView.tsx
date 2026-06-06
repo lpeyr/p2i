@@ -13,6 +13,7 @@ import {
 } from "../ActivityUtils";
 import { Acceleration } from "@/actions/session";
 import { AccelChart } from "@/components/accel-chart";
+import { ElevationChart } from "@/components/elevation-chart";
 
 const MapView = dynamic(() => import("@/components/map"), {
     ssr: false,
@@ -25,6 +26,7 @@ export interface ActivityViewProps {
     steps: number;
     durationSeconds: number;
     route: [number, number][];
+    elevations: number[];
     leftContacts: FootContactValues;
     rightContacts: FootContactValues;
     leftHasActivity: boolean;
@@ -99,6 +101,7 @@ export default function ActivityView({
     steps,
     durationSeconds,
     route,
+    elevations,
     leftContacts,
     rightContacts,
     leftHasActivity,
@@ -185,6 +188,13 @@ export default function ActivityView({
                             <div>
                                 <MapView route={route} />
                             </div>
+                        </Card>
+                        <Card>
+                            <CardHeader className="flex flex-col gap-3">
+                                <p className="font-semibold">Dénivelé</p>
+                            </CardHeader>
+                            <Separator />
+                            <ElevationChart data={elevations} />
                         </Card>
                     </div>
 

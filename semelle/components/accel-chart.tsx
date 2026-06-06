@@ -55,7 +55,7 @@ export function AccelChart({ data }: Readonly<AccelChartProps>) {
                             domain={["dataMin", "dataMax"]}
                             tickFormatter={formatTime}
                         />
-                        <YAxis />
+                        <YAxis domain={["dataMin", "dataMax"]} />
                         <Tooltip
                             labelFormatter={(ts) => new Date(ts).toLocaleString("fr-FR")}
                             contentStyle={{
