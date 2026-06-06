@@ -28,8 +28,6 @@ interface ActivityData {
 }
 
 export default function ActivityClient({
-    sessions,
-    canStart,
     canStop,
     lastSessionId,
     semelle1,

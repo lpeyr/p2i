@@ -3,7 +3,6 @@ import { query, type Semelle } from "@/lib/db";
 import totalDistanceMeters from "@/lib/distance";
 import getSessionStats, { getElevations, getSession } from "@/actions/session";
 import ActivityView, { type ActivityViewProps, type FootContactValues } from "./ActivityView";
-import { Error } from "@/components/error";
 
 export const dynamic = "force-dynamic";
 
@@ -44,94 +43,88 @@ function buildRoute(gpsRows: SessionGpsRow[]) {
 export default async function ReadOnlyActivityPage({
     params,
 }: Readonly<ReadOnlyActivityPageProps>) {
-    try {
-        const resolvedParams = await params;
-        const activityId = parseActivityId(resolvedParams.activity);
-        if (!activityId) {
-            notFound();
-        }
-
-        const session = await getSession(activityId);
-        if (!session) {
-            notFound();
-        }
-
-        const [semelleStats, semelles, gpsRows] = await Promise.all([
-            getSessionStats(activityId),
-            query<Semelle[]>("SELECT * FROM Semelle WHERE idSemelle IN (?, ?) ORDER BY idSemelle", [
-                session.semelle1,
-                session.semelle2,
-            ]),
-            query<SessionGpsRow[]>(
-                `SELECT lattitude, longitude FROM MesureGPS WHERE idSession = ? AND lattitude IS NOT NULL AND longitude IS NOT NULL ORDER BY time, idMesure`,
-                [activityId],
-            ),
-        ]);
-
-        const elevations = await getElevations(
-            gpsRows
-                .filter(
-                    (r) =>
-                        r.lattitude !== null &&
-                        r.longitude !== null &&
-                        Number.isFinite(Number(r.lattitude)) &&
-                        Number.isFinite(Number(r.longitude)),
-                )
-                .map((r) => ({ lat: Number(r.lattitude), lon: Number(r.longitude) })),
-        );
-
-        const sessionStart = new Date(session.dateDebut);
-        const sessionEnd = session.dateFin ? new Date(session.dateFin) : null;
-        if (
-            Number.isNaN(sessionStart.getTime()) ||
-            (sessionEnd !== null && Number.isNaN(sessionEnd.getTime()))
-        ) {
-            notFound();
-        }
-
-        const semelleBySide = new Map(semelles.map((semelle) => [semelle.side, semelle] as const));
-        const leftSemelle = semelleBySide.get("left") ?? semelles[0];
-        const rightSemelle = semelleBySide.get("right") ?? semelles[1];
-
-        const leftContacts = toContacts(
-            session.semelle1 === leftSemelle?.idSemelle
-                ? semelleStats.semelle1
-                : semelleStats.semelle2,
-        );
-        const rightContacts = toContacts(
-            session.semelle1 === rightSemelle?.idSemelle
-                ? semelleStats.semelle1
-                : semelleStats.semelle2,
-        );
-
-        const route = buildRoute(gpsRows);
-        const safeRoute: [number, number][] = route.length > 0 ? route : [[45.782562, 4.872407]];
-        const distanceMeters = totalDistanceMeters(safeRoute.map(([lat, lon]) => ({ lat, lon })));
-        const durationSeconds = getDurationSeconds(sessionStart, sessionEnd);
-        const speedKmh = durationSeconds > 0 ? distanceMeters / 1000 / (durationSeconds / 3600) : 0;
-
-        const props: ActivityViewProps = {
-            activityId,
-            sessionStartIso: sessionStart.toISOString(),
-            sessionEndIso: sessionEnd?.toISOString() ?? null,
-            steps: Number(session.step ?? 0),
-            durationSeconds,
-            route: safeRoute,
-            elevations: elevations.map((g) => Number(g.alt)),
-            leftContacts,
-            rightContacts,
-            leftHasActivity: leftContacts.some((value) => value > 0),
-            rightHasActivity: rightContacts.some((value) => value > 0),
-            distanceMeters,
-            speedKmh,
-            accelerations: {
-                left: semelleStats.semelle1.accelerations,
-                right: semelleStats.semelle2.accelerations,
-            },
-        };
-
-        return <ActivityView {...props} />;
-    } catch (error) {
-        return <Error error={error as Error} />;
+    const resolvedParams = await params;
+    const activityId = parseActivityId(resolvedParams.activity);
+    if (!activityId) {
+        notFound();
     }
+
+    const session = await getSession(activityId);
+    if (!session) {
+        notFound();
+    }
+
+    const [semelleStats, semelles, gpsRows] = await Promise.all([
+        getSessionStats(activityId),
+        query<Semelle[]>("SELECT * FROM Semelle WHERE idSemelle IN (?, ?) ORDER BY idSemelle", [
+            session.semelle1,
+            session.semelle2,
+        ]),
+        query<SessionGpsRow[]>(
+            `SELECT lattitude, longitude FROM MesureGPS WHERE idSession = ? AND lattitude IS NOT NULL AND longitude IS NOT NULL ORDER BY time, idMesure`,
+            [activityId],
+        ),
+    ]);
+
+    const elevations = await getElevations(
+        gpsRows
+            .filter(
+                (r) =>
+                    r.lattitude !== null &&
+                    r.longitude !== null &&
+                    Number.isFinite(Number(r.lattitude)) &&
+                    Number.isFinite(Number(r.longitude)),
+            )
+            .map((r) => ({ lat: Number(r.lattitude), lon: Number(r.longitude) })),
+    );
+
+    const sessionStart = new Date(session.dateDebut);
+    const sessionEnd = session.dateFin ? new Date(session.dateFin) : null;
+    if (
+        Number.isNaN(sessionStart.getTime()) ||
+        (sessionEnd !== null && Number.isNaN(sessionEnd.getTime()))
+    ) {
+        notFound();
+    }
+
+    const semelleBySide = new Map(semelles.map((semelle) => [semelle.side, semelle] as const));
+    const leftSemelle = semelleBySide.get("left") ?? semelles[0];
+    const rightSemelle = semelleBySide.get("right") ?? semelles[1];
+
+    const leftContacts = toContacts(
+        session.semelle1 === leftSemelle?.idSemelle ? semelleStats.semelle1 : semelleStats.semelle2,
+    );
+    const rightContacts = toContacts(
+        session.semelle1 === rightSemelle?.idSemelle
+            ? semelleStats.semelle1
+            : semelleStats.semelle2,
+    );
+
+    const route = buildRoute(gpsRows);
+    const safeRoute: [number, number][] = route.length > 0 ? route : [[45.782562, 4.872407]];
+    const distanceMeters = totalDistanceMeters(safeRoute.map(([lat, lon]) => ({ lat, lon })));
+    const durationSeconds = getDurationSeconds(sessionStart, sessionEnd);
+    const speedKmh = durationSeconds > 0 ? distanceMeters / 1000 / (durationSeconds / 3600) : 0;
+
+    const props: ActivityViewProps = {
+        activityId,
+        sessionStartIso: sessionStart.toISOString(),
+        sessionEndIso: sessionEnd?.toISOString() ?? null,
+        steps: Number(session.step ?? 0),
+        durationSeconds,
+        route: safeRoute,
+        elevations: elevations.map((g) => Number(g.alt)),
+        leftContacts,
+        rightContacts,
+        leftHasActivity: leftContacts.some((value) => value > 0),
+        rightHasActivity: rightContacts.some((value) => value > 0),
+        distanceMeters,
+        speedKmh,
+        accelerations: {
+            left: semelleStats.semelle1.accelerations,
+            right: semelleStats.semelle2.accelerations,
+        },
+    };
+
+    return <ActivityView {...props} />;
 }
