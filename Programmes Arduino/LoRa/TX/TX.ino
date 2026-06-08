@@ -17,7 +17,7 @@
 #define FLEXI1              A0
 #define FLEXI2              A3
 #define FLEXI3              A6
-#define SEUIL1              550
+#define SEUIL1              600
 #define SEUIL2              400
 #define SEUIL3              600
 #define NB_MAX_ANGLE        1500

@@ -16,7 +16,7 @@
 #include <SensorFusion.h>
 #include <Wire.h>
 #include <math.h>
-#include <TinyGPS++.h>
+#include <TinyGPSPlus.h>
 #include <SD.h>
 
 // ─── Activer pour calibrer (commenter pour la course) ─────────────────────────
@@ -34,9 +34,9 @@
 #define FLEXI1                 A3
 #define FLEXI2                 A0
 #define FLEXI3                 A6
-#define SEUIL1                 550
+#define SEUIL1                 500
 #define SEUIL2                 400
-#define SEUIL3                 600
+#define SEUIL3                 500
 #define SIDE                   "left"
 #define TRAME_DEB_MESURE_ANGLE 0
 #define SD_CS_PIN              4
@@ -108,20 +108,12 @@ void lireGPSDisponible() {
 }
 
 void gpsVal() {
-  if (!gps.location.isValid()) {
-    unsigned long debut = millis();
-    while (millis() - debut < 5000) {
-      while (Serial1.available()) {
-        if (gps.encode(Serial1.read()) && gps.location.isValid()) break;
-      }
-      if (gps.location.isValid()) break;
-    }
-  }
   if (gps.location.isValid()) {
-    trame.timestamp = gpsToTimestamp(gps.date, gps.time);
-    trame.gps[0]    = (uint16_t)(gps.location.lat() * 100);
-    trame.gps[1]    = (uint16_t)(gps.location.lng() * 100);
-  }
+    trame.gps[0] = gps.location.lat()*100000;              
+    trame.gps[1] = gps.location.lng()*100000;
+}else{
+  Serial.println("INVALID");
+}
 }
 
 // ─── Flex ─────────────────────────────────────────────────────────────────────

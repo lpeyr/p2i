@@ -1,0 +1,19 @@
+{
+    "sqltools.connections": [
+        {
+            "mysqlOptions": {
+                "authProtocol": "default",
+                "enableSsl": "Disabled"
+            },
+            "ssh": "Disabled",
+            "previewLimit": 50,
+            "server": "fimi-bd-srv1.insa-lyon.fr",
+            "port": 3306,
+            "driver": "MariaDB",
+            "name": "INSA",
+            "database": "G221_C_BD1",
+            "username": "G221_C",
+            "password": "G221_C"
+        }
+    ]
+}
