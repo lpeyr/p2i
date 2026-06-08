@@ -51,7 +51,7 @@ typedef struct __attribute__((packed)) {
   uint8_t  bits_f1[NB_FLEX_OCT];
   uint8_t  bits_f2[NB_FLEX_OCT];
   uint8_t  bits_f3[NB_FLEX_OCT];
-  float gps[2];
+  float    gps[2];
   int16_t  imu_acc[NB_IMU];
 } Trame_complet;
 

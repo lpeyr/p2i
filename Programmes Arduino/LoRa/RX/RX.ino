@@ -16,9 +16,9 @@ typedef struct __attribute__((packed)) {
   uint8_t  bits_f1[NB_FLEX_OCT];
   uint8_t  bits_f2[NB_FLEX_OCT];
   uint8_t  bits_f3[NB_FLEX_OCT];
-  uint16_t gps[2];
+  float    gps[2];
   int16_t  imu_acc[NB_IMU];
-} Trame_complet;                   // 64 octets
+} Trame_complet;
 
 typedef struct __attribute__((packed)) {
   uint8_t  identifiant;
@@ -26,7 +26,7 @@ typedef struct __attribute__((packed)) {
   uint8_t  bits_f2[NB_FLEX_OCT];
   uint8_t  bits_f3[NB_FLEX_OCT];
   int16_t  imu_acc[NB_IMU];
-} Trame_sansGPS;                   // 60 octets
+} Trame_sansGPS;                 
 
 // ─── Utilitaires flex ─────────────────────────────────────────────────────────
 bool getBit(uint8_t* tableau, int pos) {
