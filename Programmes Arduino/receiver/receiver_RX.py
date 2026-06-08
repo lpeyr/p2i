@@ -124,9 +124,9 @@ class AppliProd:
             self.cursor.execute(
                 "INSERT INTO MesureGPS (time, lattitude, longitude, idSession, idSemelle) VALUES (%s, %s, %s, %s, %s)",
                 (
-                    self.timestamp_to_datetime(trame["timestamp"]),
-                    gps["lat"],
-                    gps["lon"],
+                    self.timestamp_to_datetime(0),
+                    gps["lat"] * 100 if gps["lat"] != 0 else 45.783865,
+                    gps["lon"] * 100 if gps["lon"] != 0 else 4.882950,
                     idSession,
                     trame["id"],
                 ),
@@ -146,7 +146,7 @@ class AppliProd:
             return
         # base de temps
         try:
-            base_dt = self.timestamp_to_datetime(trame["timestamp"])
+            base_dt = self.timestamp_to_datetime(0)
         except ValueError as e:
             print(f"MySQL [ERREUR] : {e}")
             return
@@ -222,7 +222,7 @@ class AppliProd:
             print("[BD] Trame sans accélération, insertion ignorée.")
             return
         try:
-            base_dt = self.timestamp_to_datetime(trame["timestamp"])
+            base_dt = self.timestamp_to_datetime(0)
         except ValueError as e:
             print(f"MySQL [ERREUR] : {e}")
             return

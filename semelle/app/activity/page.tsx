@@ -7,7 +7,7 @@ import getSessionStatsImpl, {
     stopSession,
 } from "@/actions/session";
 import { getSemellesFromUser } from "@/actions/user";
-import ActivityClient from "./ActivityClient";
+import ActivityClient, { ActivityData } from "./ActivityClient";
 
 export const dynamic = "force-dynamic";
 export default async function ActivityPage() {
@@ -39,41 +39,9 @@ export default async function ActivityPage() {
     }
 
     // charger les dernières infos de flexiforce pour la session chargée
-    let initialActivityData = undefined;
+    let initialActivityData = {};
     if (lastSessionId) {
-        try {
-            const stats = await getSessionStatsImpl(lastSessionId);
-            const left = stats.semelle1;
-            const right = stats.semelle2;
-            // compter les appuis par zone (nombre de true dans chaque index)
-            const leftCounts = [0, 0, 0];
-            const rightCounts = [0, 0, 0];
-            for (let i = 0; i < Math.min(left.flexi1.length, 1000000); i++) {
-                leftCounts[0] += left.flexi1[i] ? 1 : 0;
-                leftCounts[1] += left.flexi2[i] ? 1 : 0;
-                leftCounts[2] += left.flexi3[i] ? 1 : 0;
-            }
-            for (let i = 0; i < Math.min(right.flexi1.length, 1000000); i++) {
-                rightCounts[0] += right.flexi1[i] ? 1 : 0;
-                rightCounts[1] += right.flexi2[i] ? 1 : 0;
-                rightCounts[2] += right.flexi3[i] ? 1 : 0;
-            }
-
-            // trouver les métadonnées dans sessions list
-            const sessionOverview = sessions.find((s) => s.idSession === lastSessionId);
-
-            initialActivityData = {
-                steps: sessionOverview?.step ?? 0,
-                duration: sessionOverview?.durationSeconds ?? 0,
-                startTime: sessionOverview?.dateDebut ?? new Date().toISOString(),
-                leftFootContacts: leftCounts as [number, number, number],
-                rightFootContacts: rightCounts as [number, number, number],
-                speed: 0,
-            };
-        } catch {
-            // ignore stats errors
-            initialActivityData = undefined;
-        }
+        initialActivityData = await getActivityData(lastSessionId, sessions);
     }
 
     return (
@@ -86,6 +54,8 @@ export default async function ActivityPage() {
             semelle2={semelle2}
             startAction={startAction}
             stopAction={stopAction}
+            fetchActivityData={fetchActivityData}
+            initialActivityData={initialActivityData}
         />
     );
 }
@@ -103,4 +73,56 @@ async function stopAction(formData: FormData) {
     const id = Number(formData.get("idSession"));
     if (!id) return;
     await stopSession(id);
+}
+
+// Helper function to extract activity data from session stats
+async function getActivityData(
+    sessionId: number,
+    sessions: SessionOverview[],
+): Promise<ActivityData> {
+    try {
+        const stats = await getSessionStatsImpl(sessionId);
+        const left = stats.semelle1;
+        const right = stats.semelle2;
+
+        // Count flexi contacts
+        const leftCounts = [0, 0, 0];
+        const rightCounts = [0, 0, 0];
+        for (let i = 0; i < Math.min(left.flexi1.length, 1000000); i++) {
+            leftCounts[0] += left.flexi1[i] ? 1 : 0;
+            leftCounts[1] += left.flexi2[i] ? 1 : 0;
+            leftCounts[2] += left.flexi3[i] ? 1 : 0;
+        }
+        for (let i = 0; i < Math.min(right.flexi1.length, 1000000); i++) {
+            rightCounts[0] += right.flexi1[i] ? 1 : 0;
+            rightCounts[1] += right.flexi2[i] ? 1 : 0;
+            rightCounts[2] += right.flexi3[i] ? 1 : 0;
+        }
+
+        const sessionOverview = sessions.find((s) => s.idSession === sessionId);
+        return {
+            steps: sessionOverview?.step ?? 0,
+            duration: sessionOverview?.durationSeconds ?? 0,
+            startTime: sessionOverview?.dateDebut ?? new Date().toISOString(),
+            leftFootContacts: leftCounts as [number, number, number],
+            rightFootContacts: rightCounts as [number, number, number],
+            speed: 0,
+        };
+    } catch {
+        return {
+            steps: 0,
+            duration: 0,
+            startTime: new Date().toISOString(),
+            leftFootContacts: [0, 0, 0],
+            rightFootContacts: [0, 0, 0],
+            speed: 0,
+        };
+    }
+}
+
+// Server action to fetch updated activity data (called from client)
+async function fetchActivityData(sessionId: number): Promise<ActivityData> {
+    "use server";
+    const sessions = await getAllSessions();
+    return getActivityData(sessionId, sessions);
 }
