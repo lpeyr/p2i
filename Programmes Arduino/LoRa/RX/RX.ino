@@ -52,9 +52,9 @@ void afficherTrame(Trame_complet& trame) {
   Serial.print(", \"flexi3\": ");    afficherListeBits(trame.bits_f3);
 
   Serial.print(", \"gps\": {\"lat\": ");
-  Serial.print(trame.gps[0] / 100.0f, 2);
+  Serial.print(trame.gps[0], 6);
   Serial.print(", \"lon\": ");
-  Serial.print(trame.gps[1] / 100.0f, 2);
+  Serial.print(trame.gps[1], 6);
   Serial.print("}");
 
   Serial.print(", \"accel\": [");
