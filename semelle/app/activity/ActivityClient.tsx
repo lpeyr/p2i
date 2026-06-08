@@ -1,7 +1,7 @@
 "use client";
 
 import { Button, Card, CardHeader, Chip, Separator } from "@heroui/react";
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { Play, Square } from "@gravity-ui/icons";
 import dynamic from "next/dynamic";
 import {
@@ -18,7 +18,16 @@ const MapView = dynamic(() => import("./../../components/map"), {
     ssr: false,
 });
 
-interface ActivityData {
+export interface ActivityData {
+    steps: number;
+    duration: number;
+    startTime: Date | string;
+    leftFootContacts: FootContactValues;
+    rightFootContacts: FootContactValues;
+    speed: number;
+}
+
+interface ActivityDataInternal {
     steps: number;
     duration: number;
     startTime: Date;
@@ -34,6 +43,7 @@ export default function ActivityClient({
     semelle2,
     startAction,
     stopAction,
+    fetchActivityData,
     initialActivityData,
 }: Readonly<{
     sessions: SessionOverview[];
@@ -44,13 +54,17 @@ export default function ActivityClient({
     semelle2?: number | null;
     startAction?: (formData: FormData) => Promise<void>;
     stopAction?: (formData: FormData) => Promise<void>;
+    fetchActivityData?: (sessionId: number) => Promise<ActivityData>;
     initialActivityData?: Partial<ActivityData>;
 }>) {
-    const [isActive, setIsActive] = useState(canStop); // si canStop est true, cela signifie qu'une session est déjà active
-    const [activityData, setActivityData] = useState<ActivityData>({
+    const [isActive, setIsActive] = useState(canStop);
+    const [activityData, setActivityData] = useState<ActivityDataInternal>({
         steps: initialActivityData?.steps ?? 0,
         duration: initialActivityData?.duration ?? 0,
-        startTime: initialActivityData?.startTime ?? new Date(),
+        startTime:
+            initialActivityData?.startTime instanceof Date
+                ? initialActivityData.startTime
+                : new Date(initialActivityData?.startTime ?? 0),
         leftFootContacts: initialActivityData?.leftFootContacts ?? [0, 0, 0],
         rightFootContacts: initialActivityData?.rightFootContacts ?? [0, 0, 0],
         speed: initialActivityData?.speed ?? 0,
@@ -84,6 +98,32 @@ export default function ActivityClient({
             });
         });
     };
+
+    useEffect(() => {
+        if (!isActive || !lastSessionId || !fetchActivityData) return;
+
+        const interval = setInterval(async () => {
+            try {
+                const data = await fetchActivityData(lastSessionId);
+                if (data && Object.keys(data).length > 0) {
+                    const startTime =
+                        data.startTime instanceof Date ? data.startTime : new Date(data.startTime);
+                    setActivityData({
+                        steps: data.steps ?? 0,
+                        duration: data.duration ?? 0,
+                        startTime: startTime,
+                        leftFootContacts: data.leftFootContacts ?? [0, 0, 0],
+                        rightFootContacts: data.rightFootContacts ?? [0, 0, 0],
+                        speed: data.speed ?? 0,
+                    });
+                }
+            } catch (error) {
+                console.error("Failed to fetch activity data:", error);
+            }
+        }, 5000);
+
+        return () => clearInterval(interval);
+    }, [isActive, lastSessionId, fetchActivityData]);
 
     return (
         <main className="min-h-screen p-8">
