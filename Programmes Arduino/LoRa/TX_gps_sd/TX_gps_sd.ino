@@ -276,8 +276,8 @@ void envoyerTrame() {
   Serial.println("=== TRAME ===");
   Serial.print("ID        : "); Serial.println(trame.identifiant);
   Serial.print("Timestamp : "); Serial.println(trame.timestamp);
-  Serial.print("GPS lat   : "); Serial.println(trame.gps[0] / 100.0f, 2);
-  Serial.print("GPS lon   : "); Serial.println(trame.gps[1] / 100.0f, 2);
+  Serial.print("GPS lat   : "); Serial.println(trame.gps[0], 6);
+  Serial.print("GPS lon   : "); Serial.println(trame.gps[1], 6);
 
   Serial.print("Flex1 : ");
   for (int i = 0; i < NB_FLEX_OCT * 8; i++) Serial.print((trame.bits_f1[i/8] >> (i%8)) & 1);
