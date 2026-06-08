@@ -51,7 +51,7 @@ typedef struct __attribute__((packed)) {
   uint8_t  bits_f1[NB_FLEX_OCT];
   uint8_t  bits_f2[NB_FLEX_OCT];
   uint8_t  bits_f3[NB_FLEX_OCT];
-  uint16_t gps[2];
+  float gps[2];
   int16_t  imu_acc[NB_IMU];
 } Trame_complet;
 
@@ -109,11 +109,42 @@ void lireGPSDisponible() {
 
 void gpsVal() {
   if (gps.location.isValid()) {
-    trame.gps[0] = gps.location.lat()*100000;              
-    trame.gps[1] = gps.location.lng()*100000;
-}else{
-  Serial.println("INVALID");
-}
+    trame.gps[0] = gps.location.lat();
+    trame.gps[1] = gps.location.lng();
+  } else {
+    Serial.println("GPS: INVALID");
+  }
+
+  Serial.print(F("Location: "));
+  if (gps.location.isValid()) {
+    Serial.print(gps.location.lat(), 6);
+    Serial.print(F(","));
+    Serial.print(gps.location.lng(), 6);
+  } else {
+    Serial.print(F("INVALID"));
+  }
+
+  Serial.print(F("  Date/Time: "));
+  if (gps.date.isValid()) {
+    Serial.print(gps.date.month()); Serial.print(F("/"));
+    Serial.print(gps.date.day());   Serial.print(F("/"));
+    Serial.print(gps.date.year());
+  } else {
+    Serial.print(F("INVALID"));
+  }
+
+  Serial.print(F(" "));
+  if (gps.time.isValid()) {
+    if (gps.time.hour()   < 10) Serial.print(F("0"));
+    Serial.print(gps.time.hour());   Serial.print(F(":"));
+    if (gps.time.minute() < 10) Serial.print(F("0"));
+    Serial.print(gps.time.minute()); Serial.print(F(":"));
+    if (gps.time.second() < 10) Serial.print(F("0"));
+    Serial.print(gps.time.second());
+  } else {
+    Serial.print(F("INVALID"));
+  }
+  Serial.println();
 }
 
 // ─── Flex ─────────────────────────────────────────────────────────────────────
@@ -223,7 +254,7 @@ void remplir_trame() {
   nbr_imu_acc_actuel = 0;
   nb_mesure_actuel   = 0;
 
-  gpsVal();
+  
 
   unsigned long t_debut      = millis();
   unsigned long t_last_flex  = t_debut;
@@ -236,6 +267,8 @@ void remplir_trame() {
     unsigned long maintenant = millis();
 
     lireGPSDisponible();
+    
+    gpsVal();
 
     if (maintenant - t_last_imu >= IMU_UPDATE_MS) {
       imuUpdate();
@@ -276,8 +309,8 @@ void envoyerTrame() {
   Serial.println("=== TRAME ===");
   Serial.print("ID        : "); Serial.println(trame.identifiant);
   Serial.print("Timestamp : "); Serial.println(trame.timestamp);
-  Serial.print("GPS lat   : "); Serial.println(trame.gps[0], 6);
-  Serial.print("GPS lon   : "); Serial.println(trame.gps[1], 6);
+  Serial.print("GPS lat   : "); Serial.println(trame.gps[0] , 6);
+  Serial.print("GPS lon   : "); Serial.println(trame.gps[1] , 6);
 
   Serial.print("Flex1 : ");
   for (int i = 0; i < NB_FLEX_OCT * 8; i++) Serial.print((trame.bits_f1[i/8] >> (i%8)) & 1);
