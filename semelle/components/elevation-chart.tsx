@@ -26,7 +26,6 @@ export function ElevationChart({ data }: Readonly<ElevationChartProps>) {
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis dataKey="i" />
                         <YAxis domain={["dataMin", "dataMax"]} />
-                        <Tooltip />
                         <Line
                             type="monotone"
                             dataKey="altitude"
