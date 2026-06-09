@@ -233,7 +233,7 @@ class AppliProd:
                     "INSERT INTO MesureAccel (time, accel, idSession, idSemelle) VALUES (%s, %s, %s, %s)",
                     (
                         new_dt,
-                        trame["accel"][i],
+                        round(trame["accel"][i], 2),
                         idSession,
                         trame["id"],
                     ),
