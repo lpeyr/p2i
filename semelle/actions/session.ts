@@ -160,38 +160,39 @@ export async function startSession(semelle1: number, semelle2: number) {
 export async function stopSession(idSession: number) {
     await query("UPDATE Session SET dateFin = NOW() WHERE idSession = ?", [idSession]);
 }
+const CHUNK_SIZE = 100;
 
 export async function getElevations(points: Omit<GpsPoint, "alt">[]): Promise<GpsPoint[]> {
     try {
-        const response = await fetch("https://api.open-elevation.com/api/v1/lookup", {
-            method: "POST",
-            headers: {
-                Accept: "application/json",
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-                locations: points.map((p) => ({
-                    latitude: p.lat,
-                    longitude: p.lon,
-                })),
-            }),
-        });
-
-        if (!response.ok) {
-            throw new Error(`Elevation API error: ${response.status} ${response.statusText}`);
+        const chunks: Omit<GpsPoint, "alt">[][] = [];
+        for (let i = 0; i < points.length; i += CHUNK_SIZE) {
+            chunks.push(points.slice(i, i + CHUNK_SIZE));
         }
 
-        const data = await response.json();
-        return data.results.map(
-            (p: { latitude: number; longitude: number; elevation: number }) => ({
-                lat: p.latitude,
-                lon: p.longitude,
-                alt: p.elevation,
-            }),
-        );
+        const elevations: number[] = [];
+
+        for (const chunk of chunks) {
+            const latitudes = chunk.map((p) => p.lat).join(",");
+            const longitudes = chunk.map((p) => p.lon).join(",");
+
+            const url = `https://api.open-meteo.com/v1/elevation?latitude=${latitudes}&longitude=${longitudes}`;
+
+            const response = await fetch(url, {
+                method: "GET",
+                headers: { Accept: "application/json" },
+            });
+
+            if (!response.ok) {
+                throw new Error(`Elevation API error: ${response.status} ${response.statusText}`);
+            }
+
+            const data: { elevation: number[] } = await response.json();
+            elevations.push(...data.elevation);
+        }
+
+        return points.map((p, i) => ({ ...p, alt: elevations[i] }));
     } catch {
         return points.map((p) => ({ ...p, alt: 0 }));
     }
 }
-
 export default getSessionStatsImpl;
