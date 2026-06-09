@@ -125,8 +125,8 @@ class AppliProd:
                 "INSERT INTO MesureGPS (time, lattitude, longitude, idSession, idSemelle) VALUES (%s, %s, %s, %s, %s)",
                 (
                     self.timestamp_to_datetime(0),
-                    gps["lat"] * 100 if gps["lat"] != 0 else 45.783865,
-                    gps["lon"] * 100 if gps["lon"] != 0 else 4.882950,
+                    gps["lat"] if gps["lat"] != 0 else 45.783865,
+                    gps["lon"] if gps["lon"] != 0 else 4.882950,
                     idSession,
                     trame["id"],
                 ),
