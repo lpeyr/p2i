@@ -34,9 +34,9 @@
 #define FLEXI1                 A3
 #define FLEXI2                 A0
 #define FLEXI3                 A6
-#define SEUIL1                 500
-#define SEUIL2                 400
-#define SEUIL3                 500
+#define SEUIL1                 400
+#define SEUIL2                 300
+#define SEUIL3                 800
 #define SIDE                   "left"
 #define TRAME_DEB_MESURE_ANGLE 0
 #define SD_CS_PIN              4
@@ -198,7 +198,7 @@ void imuValAccel() {
   float norme = sqrt(linX*linX + linY*linY + linZ*linZ);
 
   if (nbr_imu_acc_actuel < NB_IMU) {
-    trame.imu_acc[nbr_imu_acc_actuel] = (int16_t)(norme * 100);
+    trame.imu_acc[nbr_imu_acc_actuel] = (int16_t)(norme * 100) - 1;
     nbr_imu_acc_actuel++;
   }
 }

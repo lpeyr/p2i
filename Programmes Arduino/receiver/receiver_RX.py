@@ -13,7 +13,9 @@ class AppliProd:
         self.connexion_bd_commune = None
         self.cursor = None
         self.buffer = deque()  # FIFO avec deque
-        self.last_flexi_state = {}  # stocke dernier état connu par idSemelle: {id: {'flexi1':0,'flexi3':0}}
+        self.last_flexi_state = (
+            {}
+        )  # stocke dernier état connu par idSemelle: {id: {'flexi1':0,'flexi3':0}}
         with open(".config/db_conn.json", "r") as f:
             self.db_config = json.load(f)
 
@@ -204,7 +206,10 @@ class AppliProd:
 
         # sauvegarder dernier état (dernier élément de la liste si présent)
         if idSemelle is not None and prev1_in_list is not None:
-            self.last_flexi_state[idSemelle] = {"flexi1": prev1_in_list, "flexi3": prev3_in_list}
+            self.last_flexi_state[idSemelle] = {
+                "flexi1": prev1_in_list,
+                "flexi3": prev3_in_list,
+            }
 
         # incrémenter le compteur de pas dans la table Session
         if steps_added > 0:
@@ -251,12 +256,12 @@ class AppliProd:
             return
 
         with serial.Serial(
-                port=port,
-                baudrate=9600,
-                bytesize=serial.EIGHTBITS,
-                parity=serial.PARITY_NONE,
-                stopbits=serial.STOPBITS_ONE,
-                timeout=1,
+            port=port,
+            baudrate=9600,
+            bytesize=serial.EIGHTBITS,
+            parity=serial.PARITY_NONE,
+            stopbits=serial.STOPBITS_ONE,
+            timeout=1,
         ) as ser:
             print(f"Connecté à {ser.name} — en écoute...\n")
 

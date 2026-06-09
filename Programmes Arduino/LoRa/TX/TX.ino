@@ -17,9 +17,9 @@
 #define FLEXI1              A0
 #define FLEXI2              A3
 #define FLEXI3              A6
-#define SEUIL1              600
-#define SEUIL2              400
-#define SEUIL3              600
+#define SEUIL1              400
+#define SEUIL2              300
+#define SEUIL3              800
 #define NB_MAX_ANGLE        1500
 #define SIDE                "right"
 
@@ -88,7 +88,7 @@ void imuValAccel() {
   float norme = sqrt(axf*axf + ayf*ayf + azf*azf);
 
   if (nbr_imu_acc_actuel < NB_IMU) {
-    trame.imu_acc[nbr_imu_acc_actuel] = (int16_t)(norme * 100);
+    trame.imu_acc[nbr_imu_acc_actuel] = (int16_t)(norme * 100)*10;
     nbr_imu_acc_actuel++;
   }
 }
