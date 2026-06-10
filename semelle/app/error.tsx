@@ -7,7 +7,7 @@ interface ErrorProps {
     error: Error & { digest?: string };
 }
 
-export default function Error({ error }: ErrorProps) {
+export default function ErrorPage({ error }: ErrorProps) {
     return (
         <div className="flex min-h-screen items-center justify-center bg-white p-6 dark:bg-zinc-950">
             {/* Background grid */}
